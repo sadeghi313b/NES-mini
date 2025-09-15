@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Helpers\QColumnsHelper;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
@@ -39,11 +40,11 @@ class UserController extends Controller
             )
             ;
         }
-        
+
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         } // [/]
-        
+
         // [Pagination]
         $paginator = $query->paginate(25);
         $records = $paginator->getCollection(); // [/]
@@ -75,8 +76,8 @@ class UserController extends Controller
             $row = [];
 
             foreach ($fields as $field) {
-                $fieldInBackend = subString($field,' as ',0);
-                $fieldInFront = subString($field,' as ',1);
+                $fieldInBackend = subString($field, ' as ', 0);
+                $fieldInFront = subString($field, ' as ', 1);
                 $field = $fieldInBackend;
                 if (str_contains($field, '.')) {
                     [$mainField, $nestedField] = array_pad(explode('.', $field, 2), 2, null);
@@ -108,15 +109,13 @@ class UserController extends Controller
 
     public function create()
     {
+        dd('@create');
         return inertia('Users/Create');
     }
 
     public function store(StoreUserRequest $request)
     {
-        $data = $request->validated();
-        User::create($data);
-
-        return redirect()->route('users.index')->with('success', 'User created successfully.');
+        dd('@store');
     }
 
     public function show(User $user)
@@ -139,8 +138,20 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
-        $user->delete();
-        return redirect()->route('users.index')->with('success', 'User deleted successfully.');
+        dd('@destroy');
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        if (in_array(1,$ids)) {abort(403, "You can't delete the 'Super Admin'");}
+        if (!empty($ids)) {
+            User::whereIn('id', $ids)->delete();
+        }
+        return redirect()->route('users.index')
+            ->with('success', 'Selected users deleted successfully.');
+        //return Inertia::location( url()->previous() ) -> with('success', 'Selected users deleted successfully.');
+    
     }
 
     public function activate(User $user)
@@ -183,6 +194,15 @@ if ( !$value ) {
     continue;
 }
 ----------------------------------------------------------------------- 
+
+    public function store(StoreUserRequest $request)
+    {
+        dd('@store');
+        $data = $request->validated();
+        User::create($data);
+
+        return redirect()->route('users.index')->with('success', 'User created successfully.');
+    }
 ----------------------------------------------------------------------- 
 ----------------------------------------------------------------------- 
 ----------------------------------------------------------------------- 

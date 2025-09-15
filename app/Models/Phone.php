@@ -18,7 +18,7 @@ class Phone extends Model
         if (empty($this->pre_country_number) || empty($this->pre_zone_number) || empty($this->number)) {
             return null;
         }
-        return '(+' . $this->pre_country_number . ')' . $this->pre_zone_number . '-' . $this->number;
+        return '(' . $this->pre_country_number . ')' . $this->pre_zone_number . '-' . $this->number;
     }
 
     protected $casts = [

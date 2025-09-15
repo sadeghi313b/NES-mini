@@ -4,9 +4,8 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
-use App\Models\User;
 
-class UserRequest extends FormRequest
+class StoreUserRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -21,7 +20,7 @@ class UserRequest extends FormRequest
      */
     public function rules(): array
     {
-        $rules = [
+        return [
             'gender' => ['required', new Enum(['male', 'female'])],
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
@@ -30,29 +29,6 @@ class UserRequest extends FormRequest
             'description' => 'nullable|string',
             'status' => 'boolean',
         ];
-
-        // For update requests, modify rules
-        if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
-            // Make fields optional for update
-            $rules = array_map(function ($rule) {
-                return 'sometimes|' . $rule;
-            }, $rules);
-
-            // For email uniqueness, ignore current user
-            if ($this->has('email')) {
-                $userId = $this->route('user')?->id ?? $this->user->id ?? null;
-                if ($userId) {
-                    $rules['email'] = 'sometimes|email|max:255|unique:users,email,' . $userId;
-                }
-            }
-
-            // Password is not required for updates
-            if (isset($rules['password'])) {
-                $rules['password'] = str_replace('required', 'sometimes', $rules['password']);
-            }
-        }
-
-        return $rules;
     }
 
     /**
