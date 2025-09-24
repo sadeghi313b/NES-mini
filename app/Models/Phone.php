@@ -12,15 +12,6 @@ class Phone extends Model
 
     protected $guarded = ['id', 'created_by'];
 
-    protected $appends = ['phone_no']; // Virtual attributes
-    public function getPhoneNoAttribute()
-    {
-        if (empty($this->pre_country_number) || empty($this->pre_zone_number) || empty($this->number)) {
-            return null;
-        }
-        return '(' . $this->pre_country_number . ')' . $this->pre_zone_number . '-' . $this->number;
-    }
-
     protected $casts = [
         'is_main_for_sms' => 'boolean',
         'is_main_for_eitaa' => 'boolean',
@@ -30,7 +21,17 @@ class Phone extends Model
         'deleted_at' => 'datetime:Y/m/d H:i',
     ];
 
-    // Relationships
+    /* -------------------------------- Accessors ------------------------------- */
+    protected $appends = ['phone_no']; // put virtual attribute always in Model JSON response
+    public function getPhoneNoAttribute() //todo: convert to Attribute::class form
+    {
+        if (empty($this->pre_country_number) || empty($this->pre_zone_number) || empty($this->number)) {
+            return null;
+        }
+        return '(' . $this->pre_country_number . ')' . $this->pre_zone_number . '-' . $this->number;
+    }
+
+    /* ------------------------------ Relationships ----------------------------- */
     public function user()
     {
         return $this->belongsTo(User::class);

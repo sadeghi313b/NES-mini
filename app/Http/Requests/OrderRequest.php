@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\OrderStatus;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\Enum;
 
 class OrderRequest extends FormRequest
 {
@@ -25,7 +27,7 @@ class OrderRequest extends FormRequest
             'quantity' => 'required|integer|min:2000|max:80000',
             'notification_date' => 'required|date',
             'seen' => 'boolean',
-            'status' => 'required|in:active,force,hold,canceled,enough',
+            'status' => ['required', new Enum(OrderStatus::class)],
             'description' => 'nullable|string',
         ];
 

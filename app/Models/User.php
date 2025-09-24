@@ -13,6 +13,7 @@ class User extends Authenticatable
     use HasFactory, Notifiable, SoftDeletes;
     use GetFields;
 
+    const GENDERS = ['male', 'female'];
     protected $guarded = ['id', 'created_by'];
 
     protected $hidden = [
@@ -28,6 +29,13 @@ class User extends Authenticatable
         'updated_at' => 'datetime:Y/m/d H:i',
         'deleted_at' => 'datetime:Y/m/d H:i',
     ];
+
+    // [Accessors]
+    // ->full_name
+    public function getFullNameAttribute() {
+        return "{$this->first_name} {$this->last_name}";
+    } 
+    // [/]
 
     // Relationships
     public function roles()

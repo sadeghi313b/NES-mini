@@ -64,5 +64,23 @@ columns.forEach(col => {
 $column = "{ name: '$name', label: '$lable', field: '$field', align: '$align', sortable: '$sortable' },";
 return $column;
 
-
+        // [Quasar Columns]
+        $fields = [
+            'id',
+            'gender',
+            'first_name',
+            'last_name',
+            // 'actions',
+            'status',
+            'email',
+            'phones.phone_no as phone',
+            'roles.name as roles',
+            'employee.id as employee',
+            'description',
+            'created_by',
+            'created_at',
+            'updated_at',
+            'deleted_at',
+        ];
+        $columns = array_values(QColumnsHelper::QColumns($fields)); // [/]
 */

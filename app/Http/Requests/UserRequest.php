@@ -2,9 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\Gender;
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
-use App\Models\User;
 
 class UserRequest extends FormRequest
 {
@@ -22,7 +23,7 @@ class UserRequest extends FormRequest
     public function rules(): array
     {
         $rules = [
-            'gender' => ['required', new Enum(['male', 'female'])],
+            'gender' => ['required', new Enum(Gender::class)],
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email',

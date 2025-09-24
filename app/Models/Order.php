@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\OrderStatus;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -16,13 +18,45 @@ class Order extends Model
         'quantity' => 'integer',
         'notification_date' => 'date:Y/m/d',
         'seen' => 'boolean',
-        'status' => 'string', // enum: active, force, hold, canceled, enough
+        'status' => OrderStatus::class,
         'created_at' => 'datetime:Y/m/d H:i',
         'updated_at' => 'datetime:Y/m/d H:i',
         'deleted_at' => 'datetime:Y/m/d H:i',
     ];
 
-    // Relationships
+    /* -------------------------------- Accessors ------------------------------- */
+    protected function seenLabel(): Attribute //seenInfo
+    {
+        return Attribute::make(
+            get: fn() => $this->seen ? 'seen' : 'unseen',
+            set: fn($value) => $value === 'seen'
+        );
+    }
+
+    /* ------------------------ filterables & searcjables ----------------------- */
+    // فیلدهایی که قابلیت جستجو دارند
+    // $order->searchable
+    protected $searchable = [
+        'product',
+        'description',
+    ];
+
+    // فیلدهایی که قابل فیلتر هستند
+    // 
+    protected $filterable = [
+        'product',
+        'month',
+        'status',
+        'seen',
+    ];
+
+    // روابطی که می‌توان روی آن‌ها جستجو کرد
+    // $order->searchableRelations
+    protected $searchableRelations = [
+        'product' => 'product_id',
+    ];
+
+    /* ------------------------------ Relationships ----------------------------- */
     public function product()
     {
         return $this->belongsTo(Product::class);

@@ -2,15 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Helpers\QColumnsHelper;
+use App\Enums\Gender;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
+use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class UserController extends Controller
 {
+
     public function index(Request $request)
     {
         // [Query]
@@ -20,7 +23,8 @@ class UserController extends Controller
             'roles',
             'employee:id,user_id'
         ];
-        $query->with($relateds); // [/]
+        $query->with($relateds);
+        // [/]
 
         // [Filters]
         if ($request->filled('search')) {
@@ -46,76 +50,43 @@ class UserController extends Controller
         } // [/]
 
         // [Pagination]
-        $paginator = $query->paginate(25);
+        $paginator = $query->paginate(10);
         $records = $paginator->getCollection(); // [/]
-
-        // [Quasar Columns]
-        $fields = [
-            'id',
-            'gender',
-            'first_name',
-            'last_name',
-            'actions',
-            'status',
-            'email',
-            'phones.phone_no as phone',
-            'roles.name as roles',
-            'employee.id as is_employee',
-            'description',
-            'created_by',
-            'created_at',
-            'updated_at',
-            'deleted_at',
-        ];
-        $columns = array_values(QColumnsHelper::QColumns($fields)); // [/]
-
-        // [Quasar Rows]
-        $rows = [];
-        foreach ($records as $record) {
-            $record = $record->toArray();
-            $row = [];
-
-            foreach ($fields as $field) {
-                $fieldInBackend = subString($field, ' as ', 0);
-                $fieldInFront = subString($field, ' as ', 1);
-                $field = $fieldInBackend;
-                if (str_contains($field, '.')) {
-                    [$mainField, $nestedField] = array_pad(explode('.', $field, 2), 2, null);
-                    $cellValue =  collect($record[$mainField])->pluck($nestedField)
-                        ->filter() // Remove null/empty values
-                        ->implode(', '); //return string
-                    $row[$fieldInFront] = $cellValue;
-                } else {
-                    $row[$field] = $record[$field] ?? null;
-                }
-            }
-            $rows[] = $row;
-        }  // [/]
 
         // [Return]
         return Inertia::render('Users/Index', [
-            'users' => $paginator,
-            'rows' => $rows,
+            'users' => UserResource::collection($paginator),
             'filters' => $request->only('search', 'status'),
-            'columns' => $columns,
-            'pagination' => [
-                'current_page' =>  $paginator->currentPage(),
-                'last_page' =>  $paginator->lastPage(),
-                'per_page' =>  $paginator->perPage(),
-                'total' =>  $paginator->total(),
-            ],
-        ]); // [/]
+            // 'pagination' => [
+            //     'current_page' =>  $paginator->currentPage(),
+            //     'last_page' =>  $paginator->lastPage(),
+            //     'per_page' =>  $paginator->perPage(),
+            //     'total' =>  $paginator->total(),
+            // ],
+        ]);
+        // [/]
     }
 
     public function create()
     {
-        dd('@create');
-        return inertia('Users/Create');
+        // $genders = collect(User::GENDERS)->map(fn($value) => [
+        //     'label' => ucfirst($value),
+        //     'value' => $value,
+        // ])->toArray();
+        // $genders = getEnumValues('users', 'gender');
+        $genders = Gender::options();
+        return inertia('Users/Create', [
+            'genders' => $genders,
+        ]);
     }
 
     public function store(StoreUserRequest $request)
     {
         dd('@store');
+        $data = $request->validated();
+        User::create($data);
+
+        return redirect()->route('users.index')->with('success', 'User created successfully.');
     }
 
     public function show(User $user)
@@ -144,14 +115,16 @@ class UserController extends Controller
     public function bulkDestroy(Request $request)
     {
         $ids = $request->input('ids', []);
-        if (in_array(1,$ids)) {abort(403, "You can't delete the 'Super Admin'");}
+        if (in_array(1, $ids)) {
+            abort(403, "You can't delete the 'Super Admin'");
+        }
         if (!empty($ids)) {
             User::whereIn('id', $ids)->delete();
         }
         return redirect()->route('users.index')
             ->with('success', 'Selected users deleted successfully.');
         //return Inertia::location( url()->previous() ) -> with('success', 'Selected users deleted successfully.');
-    
+
     }
 
     public function activate(User $user)
@@ -194,16 +167,47 @@ if ( !$value ) {
     continue;
 }
 ----------------------------------------------------------------------- 
+        $rows = [];
+        foreach ($records as $record) {
+            $record = $record->toArray();
+            $row = [];
 
-    public function store(StoreUserRequest $request)
-    {
-        dd('@store');
-        $data = $request->validated();
-        User::create($data);
-
-        return redirect()->route('users.index')->with('success', 'User created successfully.');
-    }
------------------------------------------------------------------------ 
+            foreach ($fields as $field) {
+                $fieldInBackend = subString($field, ' as ', 0);
+                $fieldInFront = subString($field, ' as ', 1);
+                $field = $fieldInBackend;
+                if (str_contains($field, '.')) {
+                    [$mainField, $nestedField] = array_pad(explode('.', $field, 2), 2, null);
+                    $cellValue =  collect($record[$mainField])->pluck($nestedField)
+                        ->filter() // Remove null/empty values
+                        ->implode(', '); //return string
+                    $row[$fieldInFront] = $cellValue;
+                } else {
+                    $row[$field] = $record[$field] ?? null;
+                }
+            }
+            $rows[] = $row;
+        }  
+        [/]
+-----------------------------------------------------------------------
+        // [Quasar Columns & rows]
+        $fields = [
+            'id',
+            'gender',
+            'first_name',
+            'last_name',
+            // 'actions',
+            'status',
+            'email',
+            'phones.phone_no as phone',
+            'roles.name as roles',
+            'employee.id as employee',
+            'description',
+            'created_by',
+            'created_at',
+            'updated_at',
+            'deleted_at',
+        ]; 
 ----------------------------------------------------------------------- 
 ----------------------------------------------------------------------- 
 ----------------------------------------------------------------------- 

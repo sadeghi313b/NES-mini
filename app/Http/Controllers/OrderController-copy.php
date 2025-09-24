@@ -24,40 +24,47 @@ class OrderController extends Controller
         $related = ['product', 'month', 'createdBy'];
 
         // [Searchables]
-        $searchables = [
-            'product' => $request->input('searchables.product') ?? '',
-            'description' => $request->input('searchables.description') ?: '',
-        ];
-        
-        // [Query]
-        $query = Order::with($related)->orderBy('id', 'asc');
-        /* --------------------------- query search texts -------------------------- */
-        if (!empty($searchables['description'])) {
-            $query->whereLike('description',  '%' . $searchables['description'] . '%');
-        }
+        $searchables = ['product.product_id', 'description'];
 
-        if (!empty($searchables['product'])) {
-            $query->whereHas('product', function ($q) use ($searchables) {
-                $q->whereLike('product_id', '%' . $searchables['product'] . '%');
-            });
-        }
+        // dd($request->selections);
 
-        /* ------------------------ query filter selections ------------------------- */
         if ($request->filled('selections.product')) {
             $query->whereIn('product_id', $request->input('selections.product'));
         }
 
-        if ($request->filled('selections.month')) {
-            $query->whereIn('month_id', $request->input('selections.month'));
+        if ($request->filled('selections.seen')) {
+            $query->whereIn('seen', $request->input('selections.seen'));
         }
 
-        if ($request->filled('selections.status')) {
-            $query->whereIn('status', $request->input('selections.status'));
+        // [Query]
+        $query = Order::with($related)->orderBy('id', 'asc');
+
+        if ($request->filled('searchProduct')) {
+            $query->whereHas('product', function ($q) use ($request) {
+                $q->whereLike('product_id', '%' . $request->searchProduct . '%');
+            });
         }
-        if ($request->filled('selections.seen')) {
-            $query->where('seen', strtolower($request->input('selections.seen')));
+
+        if ($request->filled('searchDescription')) {
+            $query->whereLike('description',  '%' . $request->searchDescription . '%');
         }
-        // [/]
+
+        // Apply column filters
+        if ($request->filled('productFilter')) {
+            $query->whereIn('product_id', $request->productFilter);
+        }
+        // clg(now());
+        if ($request->filled('monthFilter')) {
+            $query->whereIn('month_id', $request->monthFilter);
+        }
+
+        if ($request->filled('statusFilter')) {
+            $query->whereIn('status', $request->statusFilter);
+        }
+
+        if ($request->filled('seenFilter')) {
+            $query->whereIn('seen', $request->seenFilter);
+        } // [/]
 
         // [Pagination]
         $rawPerPage = $request->input('perPage', 20);
@@ -69,10 +76,8 @@ class OrderController extends Controller
         $orders = $query->paginate($perPage); //$request->perPage ?? 2
         $resourcedData = OrderResource::collection($orders); // [/]
 
-        // [$filterables->options]
-        // define keys of 'selections' and lable of 'filters' as: 'product','month','status','seen';
+        // [Filterables]
         $filterables = [];
-
         $productOptions = $resourcedData->pluck('product')
             ->unique()
             ->sort()
@@ -101,16 +106,29 @@ class OrderController extends Controller
         $seenOptions = ['Seen', 'unSeen'];
         $filterables['seen'] = ['multiple' => false, 'options' => $seenOptions];
 
+        // dd($filterables);
+
         // [/]
 
         // [Return]
         $response = Inertia::render('Orders/Index', [
             'records' => $resourcedData,
 
-            'searchables' => $searchables,
+            'productOptions' => $productOptions,
+            'monthOptions' => $monthOptions,
+            'statusOptions' => $statusOptions,
             'filterables' => $filterables,
             'selections' => $request->selections,
 
+            'searchProduct' => $request->searchProduct,
+            'searchDescription' => $request->searchDescription,
+
+            'productFilter' => $request->productFilter,
+            'monthFilter' => $request->monthFilter,
+            'statusFilter' => $request->statusFilter,
+            'seenFilter' => $request->seenFilter,
+
+            'searchables' => $searchables,
             'routeName' => Route::currentRouteName(),
             'title' => 'Orders',
             'actionsRouteParams' => $actionsRouteParams,
@@ -169,29 +187,3 @@ class OrderController extends Controller
             ->with('success', 'Order deleted successfully.');
     }
 }
-
-
-
-
-/*
-$searchableAttributes = ['description'];
-$searchableRelations = ['product' => 'product_id'];
-foreach ($searchableAttributes as $att) {
-    $searchTxt = $searchables[$att];
-    if (!empty($searchTxt)) {
-        $query->whereLike($att,  '%' . $searchTxt . '%');
-    }
-}
-
-foreach ($searchableRelations as $relation => $targetColumn) {
-    $searchTxt = $searchables[$relation];
-    if (!empty($searchTxt)) {
-        $query->whereHas($relation, function ($q) use ($searchTxt, $targetColumn) {
-            $q->whereLike($targetColumn, '%' . $searchTxt . '%');
-        });
-    }
-}
-
-
-
-*/
