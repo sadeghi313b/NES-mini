@@ -58,7 +58,8 @@ $tables = getTableNamesFromMigrations();
 //temp Route::delete('dashboard/orders/bulk-destroy', [OrderController::class, 'bulkDestroy'])->name('dashboard.orders.bulkDestroy');
 foreach ($tables as $table) {
     Route::delete("dashboard/{$table}/bulk-destroy", function () use ($table) {
-        $controllerName = ucfirst($table) . 'Controller';
+        $singularTable = Str::singular($table);
+        $controllerName = ucfirst($singularTable) . 'Controller';
         $controller = app("App\\Http\\Controllers\\$controllerName");
         return $controller->bulkDestroy(request());
     })->name("dashboard.{$table}.bulk-destroy");

@@ -16,6 +16,8 @@ use Inertia\Inertia;
 class CutController extends Controller
 {
     use CookieHelper;
+    protected $icon = 'content_cut';
+    protected $title = 'Cuts';
 
     //. -------------------------------------------------------------------------- 
     //.                                    index                                   
@@ -99,7 +101,7 @@ class CutController extends Controller
                     'multiple' => false,
                     'options' => array_map(
                         fn($name, $index) => ['label' => $name, 'value' => $index + 1],
-                        ['Active', 'Inactive'],
+                        ['true', 'false'],
                         [0, 1]
                     ),
                 ],
@@ -107,10 +109,14 @@ class CutController extends Controller
             $response['filterables'] = $filterables;
         }
 
+        //. --------------------------------- return --------------------------------- */
+
         $response = array_merge($response, [
             'columns' => CutResource::setColumns(),
             'records' => $resourcedData,
             'criteria' => $criteria,
+            'icon' => $this -> icon,
+            'title' => $this -> title,
         ]);
         // mydump($response);
 
@@ -124,11 +130,13 @@ class CutController extends Controller
     //. -------------------------------------------------------------------------- */
     protected function form()
     {
-        Gate::authorize('form', Cut::class);
+        // Gate::authorize('form', Cut::class);
 
         $orders = Order::select('id', 'product_id')->get();
         return [
             'orders' => $orders,
+            'icon' => $this -> icon,
+            'title' => $this -> title,
         ];
     }
 
@@ -136,9 +144,7 @@ class CutController extends Controller
     public function create()
     {
         $responses = $this->form();
-        $responses = array_merge($responses, [
-            'titles' => ['Cut', 'Create'],
-        ]);
+        $responses = array_merge($responses, []);
 
         return Inertia::render('dashboard/Cuts/Form', $responses);
     }
@@ -161,7 +167,6 @@ class CutController extends Controller
         $cut->load(['createdBy']);
         $responses = array_merge($responses, [
             'cut' => $cut,
-            'titles' => ['Cut', 'show'],
         ]);
 
         return Inertia::render('dashboard/Cuts/Form', $responses);
@@ -172,10 +177,9 @@ class CutController extends Controller
     {
         $responses = $this->form();
 
-        $cut->load(['createdBy']);
+        $cut->load(['order', 'createdBy']);
         $responses = array_merge($responses, [
             'cut' => $cut,
-            'titles' => ['Cut', 'Edit'],
         ]);
         return Inertia::render('dashboard/Cuts/Form', $responses);
     }
@@ -183,7 +187,7 @@ class CutController extends Controller
     //. --------------------------------- update --------------------------------- 
     public function update(CutRequest $request, Cut $cut)
     {
-        Gate::authorize('edit', $cut);
+        
 
         $cutData = $request->validated();
 
