@@ -33,7 +33,7 @@ class Order extends Model
         );
     }
 
-    /* ------------------------ filterables & searcjables ----------------------- */
+    /* ------------------------ filterables & searchables ----------------------- */
     // فیلدهایی که قابلیت جستجو دارند
     // $order->searchable
     protected $searchable = [

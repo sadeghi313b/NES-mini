@@ -24,9 +24,9 @@ class CutRequest extends FormRequest
             'quantity' => 'required|integer|min:1000|max:3000',
             'maximum_batch_size' => 'required|integer|in:300,500',
             'printing_date' => 'nullable|date',
-            'cutting_date' => 'required|date',
+            'cutting_date' => 'nullable|date',
             'description' => 'nullable|string',
-            'status' => 'boolean',
+            'status' => 'nullable|boolean',
         ];
 
         // For update requests, make fields optional

@@ -14,9 +14,10 @@ use Illuminate\Support\Facades\DB;
 /* -------------------------------------------------------------------------- */
 /*                     explode string  if delimetyer exist                    */
 /* -------------------------------------------------------------------------- */
+
 if (!function_exists('subString')) {
 
-    function subString(string $string, string $delimiter = ",",int $index=0): string
+    function subString(string $string, string $delimiter = ",", int $index = 0): string
     {
         if (str_contains($string, $delimiter)) {
             $parts = explode($delimiter, $string);
@@ -58,7 +59,7 @@ if (!function_exists('clg')) {
                     foreach ($data as $key => $item) {
                         Log::info(
                             gettype($original) . ": {$key} => " .
-                            json_encode($item, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)
+                                json_encode($item, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)
                         );
                     }
                 } else {
@@ -79,8 +80,7 @@ if (!function_exists('clg')) {
 /* -------------------------------------------------------------------------- */
 /*                                getEnumValues                               */
 /* -------------------------------------------------------------------------- */
-if (!function_exists('getEnumValues'))
-{
+if (!function_exists('getEnumValues')) {
     /**
      * Get enum values from database column
      *
@@ -158,3 +158,110 @@ if (!function_exists('dd_inertia')) {
     }
 }
 
+
+/* -------------------------------------------------------------------------- */
+/*                         mydump: like jason response                        */
+/* -------------------------------------------------------------------------- */
+
+if (!function_exists('mydump')) {   // Check if the mydump function is not already defined
+    function mydump($variable, $choice = 'dd')
+    {
+        // Handle null or invalid input
+        if (is_null($variable)) {
+            return 'Variable is null';
+        }
+        /* ----------------------- with no switch: only case 2 ---------------------- */
+        // $choice='continue': continue running
+        // $choice='dd': dd($variable)
+        if (app()->runningInConsole()) {
+            // echo '<pre>';
+            echo "\033[37m<pre>";
+            echo json_encode($variable, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+            echo '</pre>';
+            echo "</pre>\033[0m";
+        } else {
+            // echo '<pre>';
+            echo '<pre style="color: white; background: black;">';
+            echo response()->json($variable, 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)->getContent();
+            echo '</pre>';
+        }
+        if ($choice == 'dd') dd($variable);
+
+        // /* ----------------------------------- ai ----------------------------------- */
+        // switch ($choice) {
+        //     case 1:
+        //         // Return formatted JSON string wrapped in <pre> tags
+        //         // return '<pre style="color: white; background: black;">' . json_encode($variable, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . '</pre>';
+        //         echo '<pre style="color: white; background: black;">' . json_encode($variable, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . '</pre>';
+        //         exit;
+        //         break;
+
+        //     case 2:
+        //         // Return JSON response if in HTTP context, otherwise fallback to JSON string
+        //         // if (app()->runningInConsole()) {
+        //         //     return json_encode($variable, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        //         //     die;
+        //         // }
+        //         // return response()->json($variable, 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        //         if (app()->runningInConsole()) {
+        //             // echo '<pre>';
+        //             echo "\033[37m<pre>";
+        //             echo json_encode($variable, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        //             echo '</pre>';
+        //             echo "</pre>\033[0m";
+        //         } else {
+        //             // echo '<pre>';
+        //             echo '<pre style="color: white; background: black;">';
+        //             echo response()->json($variable, 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)->getContent();
+        //             echo '</pre>';
+        //         }
+        //         break;
+        //     // exit;
+
+        //     case 3:
+        //         // Capture print_r output and wrap in <pre> tags
+        //         // return '<pre style="color: white; background: black;">' . print_r($variable, true) . '</pre>';
+        //         echo '<pre style="color: white; background: black;">' . print_r($variable, true) . '</pre>';
+        //         exit;
+        //         break;
+
+        //     default:
+        //         // Use Laravel's dd() for default debugging
+        //         dd($variable);
+        //         break;
+        // }
+        // /* ----------------------------------- me ----------------------------------- */
+        // // switch ($choice) {
+        // //     case 1:
+        // //         echo '<pre>';
+        // //         echo json_encode($variable, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        // //         echo '</pre>';
+        // //         break;
+
+        // //     case 2:
+        // //         return response()->json($variable, 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        // //         break;
+
+        // //     case 3:
+        // //         echo '<pre>';
+        // //         print_r($variable);
+        // //         echo '</pre>';
+        // //         break;
+
+        // //     default:
+        // //         dd($variable);
+        // //         break;
+        // // }
+
+
+
+        if ($choice == 'dd') dd($variable);
+    }
+}
+
+
+
+
+/* -------------------------------------------------------------------------- */
+/*                                     new                                    */
+/* -------------------------------------------------------------------------- */

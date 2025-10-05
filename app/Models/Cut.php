@@ -23,7 +23,9 @@ class Cut extends Model
         'deleted_at' => 'datetime:Y/m/d H:i',
     ];
 
-    // Relationships
+    /* -------------------------------------------------------------------------- */
+    /*                                Relationships                               */
+    /* -------------------------------------------------------------------------- */
     public function order()
     {
         return $this->belongsTo(Order::class);
@@ -39,6 +41,10 @@ class Cut extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+
+    /* -------------------------------------------------------------------------- */
+    /*                                    boot                                    */
+    /* -------------------------------------------------------------------------- */
     protected static function boot()
     {
         parent::boot();

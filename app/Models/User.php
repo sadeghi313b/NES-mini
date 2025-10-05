@@ -8,6 +8,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\GetFields;
 
+
 class User extends Authenticatable
 {
     use HasFactory, Notifiable, SoftDeletes;
@@ -30,19 +31,31 @@ class User extends Authenticatable
         'deleted_at' => 'datetime:Y/m/d H:i',
     ];
 
-    // [Accessors]
-    // ->full_name
-    public function getFullNameAttribute() {
-        return "{$this->first_name} {$this->last_name}";
-    } 
-    // [/]
+    /* -------------------------------------------------------------------------- */
+    /*                                  Accessors                                 */
+    /* -------------------------------------------------------------------------- */
+    protected $appends = ['full_name'];
 
-    // Relationships
+    public function getFullNameAttribute()
+    {
+        return "{$this->first_name} {$this->last_name}";
+    }
+
+
+    /* -------------------------------------------------------------------------- */
+    /*                                Relationships                               */
+    /* -------------------------------------------------------------------------- */
     public function roles()
     {
         return $this->belongsToMany(Role::class)
             ->withPivot('assigned_by', 'assigned_at')
             ->withTimestamps();
+    }
+
+    public function hasRole(string $role): bool
+    {
+        // dd(auth()->user()->roles()->pluck('name')->toArray());
+        return $this->roles()->where('name', $role)->exists();
     }
 
     public function phones()
