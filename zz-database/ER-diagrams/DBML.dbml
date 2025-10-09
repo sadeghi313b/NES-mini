@@ -1,0 +1,366 @@
+Table orders [headercolor: #175e7a] {
+	id smallint [ pk, increment, unique ]
+	product_id int
+	order_category_id integer
+	month int
+	quantity int
+	notification_date datetime
+	seen boolean
+	status varchar
+}
+
+Table users [headercolor: #175e7a] {
+	id integer [ pk, increment, unique ]
+	gender varchar
+	first_name varchar
+	last_name varchar
+	email varchar
+	password varchar
+	email_verified_at datetime
+}
+
+Table roles [headercolor: #175e7a] {
+	id int [ pk, increment, unique ]
+	name varchar
+}
+
+Table role_user [headercolor: #175e7a] {
+	id int [ pk, increment, unique ]
+	user_id int
+	role_id int
+	assigned_by int
+	assigned_at datetime
+}
+
+Table phones [headercolor: #175e7a] {
+	id int [ pk, increment, unique ]
+	user_id int
+	zone_number varchar
+	number varchar
+	category varchar
+	is_main_for_sms boolean
+	is_main_for_eitaa boolean
+}
+
+Table customers [headercolor: #175e7a] {
+	id int [ pk, increment, unique ]
+	user_id smallint
+	name varchar
+}
+
+Table products [headercolor: #175e7a] {
+	id integer [ pk, increment, unique ]
+	customer_id int
+	name varchar
+	cable_id integer
+	cutting_length int
+	tall_strip_length int
+	short_strip_length int
+	blue_strip_length int
+	brown_strip_length int
+	yellow_strip_length int
+	blue_terminal_id integer
+	brown_terminal_id integer
+	yellow_terminal_id integer
+	double_terminal_id integer
+	plug_id integer
+	cord_id integer
+	extra_earth_length tinyint
+	cord_length tinyint
+}
+
+Table terminals [headercolor: #175e7a] {
+	id integer [ pk, increment, unique ]
+	name varchar
+}
+
+Table molds [headercolor: #eeff03] {
+	id int [ pk, increment, unique ]
+	moldable_type varchar
+	moldable_id integer
+	name varchar
+	number_of_cavity int
+}
+
+Table order_categories [headercolor: #175e7a] {
+	id integer [ pk, increment, unique ]
+	order_id 
+	name varchar
+}
+
+Table deadlines [headercolor: #175e7a] {
+	id int [ pk, increment, unique ]
+	order_id int
+	promised_date datetime
+}
+
+Table deliveries [headercolor: #175e7a] {
+	id integer [ pk, increment, unique ]
+	deadline_id int
+	delivered_quantity int
+	delivered_date datetime
+}
+
+Table batches [headercolor: #175e7a] {
+	id int [ pk, increment, unique ]
+	cut_id smallint
+	batch_number varchar
+	produced_quantity int
+	start_date datetime
+	end_date datetime
+}
+
+Table inbatch_works [headercolor: #175e7a] {
+	id integer [ pk, increment, unique ]
+	work_id integer
+	batch_id int
+}
+
+Table machines [headercolor: #175e7a] {
+	id integer [ pk, increment, unique ]
+	name varchar
+	type varchar
+	capacity int
+}
+
+Table cutts [headercolor: #175e7a] {
+	id smallint [ pk, increment, not null, unique ]
+	order_id smallint
+	quantity 
+	maximum_batch_size 
+	printing_date 
+	cutting_date 
+}
+
+Table delivery_order [headercolor: #175e7a] {
+	id integer [ pk, increment, not null, unique ]
+	delivery_id smallint
+	order_id smallint
+	delivery_quantity smallint
+}
+
+Table cables [headercolor: #175e7a] {
+	id integer [ pk, increment, not null, unique ]
+	name 
+	color 
+}
+
+Table employee [headercolor: #175e7a] {
+	id integer [ pk, increment, not null, unique ]
+	user_id integer
+	sub_department_id integer
+	employee_number 
+	hire_date 
+}
+
+Table sub_departments [headercolor: #175e7a] {
+	id integer [ pk, increment, not null, unique ]
+	department_id integer
+	name 
+}
+
+Table departments [headercolor: #175e7a] {
+	id integer [ pk, increment, not null, unique ]
+	name 
+}
+
+Table activities [headercolor: #175e7a] {
+	id integer [ pk, increment, not null, unique ]
+	name 
+	interchangable_activity_category 
+}
+
+Table cycle_times [headercolor: #175e7a] {
+	id integer [ pk, increment, not null, unique ]
+	product_id integer
+	activity_id integer
+	cycletime 
+}
+
+Table effeciencies [headercolor: #175e7a] {
+	id integer [ pk, increment, not null, unique ]
+	employee_id integer
+	date 
+	daily_effeciency 
+}
+
+Table extra_works [headercolor: #175e7a] {
+	id integer [ pk, increment, not null, unique ]
+	work_id integer
+	title 
+	duration time
+}
+
+Table machine_worksheets [headercolor: #175e7a] {
+	id integer [ pk, increment, not null, unique ]
+	machin_id integer
+	work_id integer
+	date 
+}
+
+Table outbatch_works [headercolor: #175e7a] {
+	id integer [ pk, increment, not null, unique ]
+	work_id integer
+	product_id integer
+	activity_id integer
+}
+
+Table works [headercolor: #175e7a] {
+	id integer [ pk, increment, not null, unique ]
+	type 
+	date 
+	employee_id integer
+	machine_id integer
+}
+
+Table applicators [headercolor: #175e7a] {
+	id integer [ pk, increment, not null, unique ]
+	terminal_id integer
+	name 
+}
+
+Table plugs [headercolor: #175e7a] {
+	id integer [ pk, increment, not null, unique ]
+	name 
+}
+
+Table cords [headercolor: #175e7a] {
+	id integer [ pk, increment, not null, unique ]
+	name 
+}
+
+Ref fk_users_id_role_user {
+	users.id < role_user.user_id [ delete: no action, update: no action ]
+}
+
+Ref fk_roles_id_role_user {
+	roles.id < role_user.role_id [ delete: no action, update: no action ]
+}
+
+Ref fk_users_id_phones {
+	users.id < phones.user_id [ delete: no action, update: no action ]
+}
+
+Ref fk_customers_id_products {
+	customers.id < products.customer_id [ delete: no action, update: no action ]
+}
+
+Ref fk_applicators_id_products {
+	terminals.id < products.blue_terminal_id [ delete: no action, update: no action ]
+}
+
+Ref fk_applicators_id_products {
+	terminals.id < products.brown_terminal_id [ delete: no action, update: no action ]
+}
+
+Ref fk_applicators_id_products {
+	terminals.id < products.yellow_terminal_id [ delete: no action, update: no action ]
+}
+
+Ref fk_applicators_id_products {
+	terminals.id < products.double_terminal_id [ delete: no action, update: no action ]
+}
+
+Ref fk_products_id_orders {
+	products.id < orders.product_id [ delete: no action, update: no action ]
+}
+
+Ref fk_orders_id_deadlines {
+	orders.id < deadlines.order_id [ delete: no action, update: no action ]
+}
+
+Ref fk_batches_id_timesheets {
+	batches.id < inbatch_works.batch_id [ delete: no action, update: no action ]
+}
+
+Ref fk_delivery_order_delivery_id_deliveries {
+	delivery_order.delivery_id > deliveries.id [ delete: no action, update: no action ]
+}
+
+Ref fk_delivery_order_order_id_orders {
+	delivery_order.order_id > orders.id [ delete: no action, update: no action ]
+}
+
+Ref fk_orders_id_cutts {
+	orders.id < cutts.order_id [ delete: no action, update: no action ]
+}
+
+Ref fk_cutts_id_batches {
+	cutts.id < batches.cut_id [ delete: no action, update: no action ]
+}
+
+Ref fk_customers_user_id_users {
+	customers.user_id > users.id [ delete: no action, update: no action ]
+}
+
+Ref fk_cables_id_products {
+	cables.id < products.cable_id [ delete: no action, update: no action ]
+}
+
+Ref fk_users_id_employee {
+	users.id < employee.user_id [ delete: no action, update: no action ]
+}
+
+Ref fk_departments_id_sub_departments {
+	departments.id < sub_departments.department_id [ delete: no action, update: no action ]
+}
+
+Ref fk_employee_sub_department_id_sub_departments {
+	employee.sub_department_id > sub_departments.id [ delete: no action, update: no action ]
+}
+
+Ref fk_activities_id_cycle_times {
+	activities.id < cycle_times.activity_id [ delete: no action, update: no action ]
+}
+
+Ref fk_products_id_cycle_times {
+	products.id < cycle_times.product_id [ delete: no action, update: no action ]
+}
+
+Ref fk_employee_id_seeeciencies {
+	employee.id < effeciencies.employee_id [ delete: no action, update: no action ]
+}
+
+Ref fk_orders_order_category_id_order_categories {
+	orders.order_category_id > order_categories.id [ delete: no action, update: no action ]
+}
+
+Ref fk_works_id_outbatch_works {
+	works.id < outbatch_works.work_id [ delete: no action, update: no action ]
+}
+
+Ref fk_works_id_inbatch_works {
+	works.id - inbatch_works.id [ delete: no action, update: no action ]
+}
+
+Ref fk_works_id_extra_works {
+	works.id - extra_works.id [ delete: no action, update: no action ]
+}
+
+Ref fk_machines_id_machine_sheets {
+	machines.id < machine_worksheets.machin_id [ delete: no action, update: no action ]
+}
+
+Ref fk_machine_worksheets_work_id_works {
+	machine_worksheets.work_id > works.id [ delete: no action, update: no action ]
+}
+
+Ref fk_applicators_terminal_id_terminals {
+	applicators.terminal_id > terminals.id [ delete: no action, update: no action ]
+}
+
+Ref fk_plugs_id_products {
+	plugs.id < products.plug_id [ delete: no action, update: no action ]
+}
+
+Ref fk_cords_id_products {
+	cords.id < products.cord_id [ delete: no action, update: no action ]
+}
+
+Ref fk_plugs_id_molds {
+	plugs.id < molds.moldable_id [ delete: no action, update: no action ]
+}
+
+Ref fk_cords_id_molds {
+	cords.id < molds.moldable_id [ delete: no action, update: no action ]
+}

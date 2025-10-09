@@ -1,37 +1,27 @@
-# Ignore everything
-/*
-
-# Allow git to see these folders:
-!app/
-!resources/
-!routes/
-
-# Now inside app, only allow Models, Http/Controllers, Http/Requests, and helpers
-app/*
-!app/Models/
-!app/Http/
-!app/helpers/
-!app/traits/
-
-# Inside Http, only Controllers and Requests
-app/Http/*
-!app/Http/Controllers/
-!app/Http/Requests/
-
-# Vue related files inside resources
-resources/*
-!resources/css/
-!resources/views/
-resources/js/*
-!resources/js/Pages/
-!resources/js/Components/
-!resources/js/Composables/
-!resources/js/app.ts
-!resources/app.blade.php
-
-
-# Keep other Laravel essential files
-!.gitignore
-!composer.json
-!vite.config.js
-
+/.phpunit.cache
+/bootstrap/ssr
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/resources/js/actions
+/resources/js/routes
+/resources/js/wayfinder
+/vendor
+.env
+.env.backup
+.env.production
+.phpactor.json
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+/auth.json
+/.fleet
+/.idea
+/.nova
+/.vscode
+/.zed

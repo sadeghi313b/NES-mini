@@ -11,13 +11,30 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use App\Http\Controllers\Controller;
+use App\Traits\ControllerCommonMethods;
 use Inertia\Inertia;
 
 class PlugController extends Controller  implements HasMiddleware
 {
     use CookieHelper;
-    protected $icon = ['power', 'electrical_services'];
-    protected $title = ['Plugs'];
+    use ControllerCommonMethods;
+
+    //. -------------------------------------------------------------------------- */
+    //.                                  variables                                 */
+    //. -------------------------------------------------------------------------- */
+    protected $modelClass = \App\Models\Plug::class;
+    protected $requestClass = \App\Http\Requests\PlugRequest::class;
+
+    protected $basePath = [
+        'routes' => 'dashboard.plugs.',
+        'pages' => 'dashboard/Plugs/',
+    ];
+
+    protected $title = [
+        'icons' => ['power', 'electrical_services'],
+        'texts' => ['Plugs'],
+    ];
+
 
     //. -------------------------------------------------------------------------- */
     //.                                 middleware                                 */
@@ -101,28 +118,12 @@ class PlugController extends Controller  implements HasMiddleware
         }
 
 
-        //. ------------------------------- pagination ------------------------------- 
-        // [Pagination]
-        $paginationCookie = $this->getPaginationCookie($request);
-        $response['paginationCookie'] = $paginationCookie;
-
-        $rawPerPage = $paginationCookie['perPage'] ?: $request->input('perPage', 5);
-        $perPage = is_numeric($rawPerPage) ? (int) $rawPerPage : 5;
-        if ($perPage === 0) {
-            $perPage = $query->count() ?: 1;
-        }
-
-        $response['getQuery'] = $query->get()->toArray();
-        $plugs = $query->paginate($perPage);
-        $resourcedData = PlugResource::collection($plugs); // [/]
-
         //. --------------------------------- return --------------------------------- */
 
         $response = array_merge($response, [
             'columns' => PlugResource::setColumns(),
-            'records' => $resourcedData,
+            'records' => $this->paginator($request, $query, PlugResource::class),
             'criteria' => $criteria,
-            'icon' => $this->icon,
             'title' => $this->title,
         ]);
         // mydump($response);
@@ -133,28 +134,14 @@ class PlugController extends Controller  implements HasMiddleware
 
 
     //. -------------------------------------------------------------------------- */
-    //.                                    form                                    */
-    //. -------------------------------------------------------------------------- */
-    protected function form()
-    {
-        // Gate::authorize('form', Plug::class);
-
-        return [
-            'icon' => $this->icon,
-            'title' => $this->title,
-        ];
-    }
-
-
-    //. -------------------------------------------------------------------------- */
     //.                                   create                                   */
     //. -------------------------------------------------------------------------- */
     public function create()
     {
-        $responses = $this->form();
-        $responses = array_merge($responses, []);
+        $response = $this->form();
+        $response = array_merge($response, []);
 
-        return Inertia::render('dashboard/Plugs/Form', $responses);
+        return Inertia::render($this->basePath['pages'] . 'Form', $response);
     }
 
 
@@ -175,17 +162,17 @@ class PlugController extends Controller  implements HasMiddleware
     //. -------------------------------------------------------------------------- */
     public function show(Plug $plug)
     {
-        $responses = $this->form();
+        $response = $this->form();
 
         if ($plug && $plug->relationLoaded('createdBy')) {
             $plug->load(['createdBy']);
         }
         //or/ $plug?->load($plug->relationLoaded('createdBy') ? ['createdBy'] : []);
-        $responses = array_merge($responses, [
+        $response = array_merge($response, [
             'plug' => $plug,
         ]);
 
-        return Inertia::render('dashboard/Plugs/Form', $responses);
+        return Inertia::render($this->basePath['pages'] . 'Form', $response);
     }
 
     //. -------------------------------------------------------------------------- */
@@ -193,15 +180,15 @@ class PlugController extends Controller  implements HasMiddleware
     //. -------------------------------------------------------------------------- */
     public function edit(Plug $plug)
     {
-        $responses = $this->form();
+        $response = $this->form();
 
         if ($plug && $plug->relationLoaded('createdBy')) {
             $plug->load(['createdBy']);
         }
-        $responses = array_merge($responses, [
+        $response = array_merge($response, [
             'plug' => $plug,
         ]);
-        return Inertia::render('dashboard/Plugs/Form', $responses);
+        return Inertia::render($this->basePath['pages'] . 'Form', $response);
     }
 
     //. -------------------------------------------------------------------------- */
@@ -227,42 +214,5 @@ class PlugController extends Controller  implements HasMiddleware
 
         return redirect()->route('dashboard.plugs.index')
             ->with('success', 'Plug deleted successfully.');
-    }
-
-
-    //. -------------------------------------------------------------------------- */
-    //.                                 bulkDestroy                                */
-    //. -------------------------------------------------------------------------- */
-    public function bulkDestroy(Request $request)
-    {
-        $parts = explode('.', $request->route()->getName());
-        array_pop($parts);
-        $thisIndexRoute = implode('.', $parts) . '.index';
-        $thisIndexUri = ucfirst(explode('.', $request->route()->getName())[0]) . '/Index';
-        $ids = $request->input('ids', []);
-        if (empty($ids)) {
-            return Inertia::render($thisIndexUri, [
-                'error' => 'please select one or more rows',
-                'page' => $request->page,
-                'perPage' => $request->perPage,
-            ]);
-        }
-
-        $noDeletable = [];
-        if (array_intersect($noDeletable, $ids)) {
-            abort(
-                403,
-                "You can not delete records: "
-                    .
-                    implode(', ', array_intersect($noDeletable, $ids))
-            );
-        }
-
-        Plug::whereIn('id', $ids)->delete();
-
-        return redirect()->route($thisIndexRoute, [
-            'page' => $request->page,
-            'perPage' => $request->perPage,
-        ])->with('success', 'Selected plugs deleted successfully.');
     }
 }

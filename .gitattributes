@@ -1,0 +1,61 @@
+
+*.blade.php diff=html
+*.css diff=css
+*.html diff=html
+*.md diff=markdown
+*.php diff=php
+
+CHANGELOG.md export-ignore
+README.md export-ignore
+
+# Force all text files to use LF (Linux style, مناسب برای سرور)
+* text=auto eol=lf
+
+# PHP source files
+*.php text eol=lf
+
+# JavaScript / TypeScript
+*.js  text eol=lf
+*.ts  text eol=lf
+
+# Vue components
+*.vue text eol=lf
+
+# CSS / SCSS / LESS
+*.css  text eol=lf
+*.scss text eol=lf
+*.less text eol=lf
+
+# HTML / Blade templates
+*.html     text eol=lf
+*.blade.php text eol=lf
+
+# Config / Data
+*.json text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+*.xml  text eol=lf
+*.md   text eol=lf
+*.env  text eol=lf
+
+# Batch files (برای ویندوز حتماً CRLF نیاز دارند)
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# PowerShell scripts
+*.ps1 text eol=crlf
+
+# Images / binaries (بدون تغییر)
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary
+*.woff binary
+*.woff2 binary
+*.ttf  binary
+*.eot  binary
+*.mp4  binary
+*.mp3  binary
+
