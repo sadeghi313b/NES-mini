@@ -2,22 +2,32 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\CutRequest;
-use App\Http\Resources\CutResource;
-use App\Models\Cut;
-use App\Models\Month;
-use App\Models\Order;
+use App\Http\Requests\PlugRequest;
+use App\Http\Resources\PlugResource;
+use App\Models\Plug;
 use App\Traits\CookieHelper;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\Gate;
+
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
+use App\Http\Controllers\Controller;
 use Inertia\Inertia;
 
-class CutController extends Controller
+class PlugController extends Controller  implements HasMiddleware
 {
     use CookieHelper;
-    protected $icon = 'content_cut';
-    protected $title = 'Cuts';
+    protected $icon = ['power', 'electrical_services'];
+    protected $title = ['Plugs'];
+
+    //. -------------------------------------------------------------------------- */
+    //.                                 middleware                                 */
+    //. -------------------------------------------------------------------------- */
+    public static function middleware(): array
+    {
+        return [
+            'check-master-roles',
+        ];
+    }
 
     //. -------------------------------------------------------------------------- 
     //.                                    index                                   
@@ -33,6 +43,7 @@ class CutController extends Controller
         $criteria = [
             'keywords' => [ //keywords is searches texts
                 'description' => (string) $request->input('criteria.keywords.description'),
+                'type' => (string) $request->input('criteria.keywords.type'),
             ],
             'selections' => $request->input('criteria.selections') ?: (object) [],
         ];
@@ -40,57 +51,53 @@ class CutController extends Controller
         //. ----------------------- $filterables->options ----------------------------- 
         if (! $request->header('X-Inertia-Partial-Data')) {
             $filterables =  [
-                'month' => [
+                'type' => [
                     'multiple' => true,
-                    'options' => Month::query()
-                        ->select('name')
+                    'options' => Plug::query()
+                        ->select('type')
                         ->distinct()
-                        ->orderBy('name')
-                        ->pluck('name')
+                        ->orderBy('type')
+                        ->pluck('type')
                         ->map(fn($name, $index) => ['label' => $name, 'value' => $index + 1])
                         ->toArray()
                 ],
-                'maximum_batch_size' => [
+                'tag' => [
                     'multiple' => true,
-                    'options' => Cut::query()
-                        ->select('maximum_batch_size')
+                    'options' => Plug::query()
+                        ->select('tag')
                         ->distinct()
-                        ->orderBy('maximum_batch_size')
-                        ->pluck('maximum_batch_size')
+                        ->orderBy('tag')
+                        ->pluck('tag')
                         ->map(fn($name, $index) => ['label' => $name, 'value' => $index + 1])
                         ->toArray()
-                ],
-                'status' => [
-                    'multiple' => false,
-                    'options' => array_map(
-                        fn($name, $index) => ['label' => $name, 'value' => $index + 1],
-                        ['true', 'false'],
-                        [0, 1]
-                    ),
                 ],
             ];
             $response['filterables'] = $filterables;
         }
 
         //. ---------------------------------- query --------------------------------- 
-        $related = ['order', 'batches', 'createdBy'];
-        $query = Cut::with($related)->orderBy('id', 'asc');
-        
+        $query = Plug::orderBy('id', 'asc');
+
         /* --------------------------- query search texts -------------------------- */
         $input = $request->input('criteria.keywords.description');
         if (!empty($input)) {
             $query->whereLike('description', '%' . $input . '%');
         }
 
-        /* ------------------------ query filter selections ------------------------- */
-        $input = $request->input('criteria.selections.maximum_batch_size');
+        $input = $request->input('criteria.keywords.type');
         if (!empty($input)) {
-            $query->whereIn('maximum_batch_size', $input);
+            $query->whereLike('type', '%' . $input . '%');
         }
 
-        $input = $request->input('criteria.selections.status');
+        /* ------------------------ query filter selections ------------------------- */
+        $input = $request->input('criteria.selections.type');
         if (!empty($input)) {
-            $query->whereIn('status', $input);
+            $query->whereIn('type', $input);
+        }
+
+        $input = $request->input('criteria.selections.tag');
+        if (!empty($input)) {
+            $query->whereIn('tag', $input);
         }
 
 
@@ -105,18 +112,18 @@ class CutController extends Controller
             $perPage = $query->count() ?: 1;
         }
 
-        $response['getQuery'] = $query->get()->toArray(); 
-        $cuts = $query->paginate($perPage);
-        $resourcedData = CutResource::collection($cuts); // [/]
+        $response['getQuery'] = $query->get()->toArray();
+        $plugs = $query->paginate($perPage);
+        $resourcedData = PlugResource::collection($plugs); // [/]
 
         //. --------------------------------- return --------------------------------- */
 
         $response = array_merge($response, [
-            'columns' => CutResource::setColumns(),
+            'columns' => PlugResource::setColumns(),
             'records' => $resourcedData,
             'criteria' => $criteria,
-            'icon' => $this -> icon,
-            'title' => $this -> title,
+            'icon' => $this->icon,
+            'title' => $this->title,
         ]);
         // mydump($response);
 
@@ -130,13 +137,11 @@ class CutController extends Controller
     //. -------------------------------------------------------------------------- */
     protected function form()
     {
-        // Gate::authorize('form', Cut::class);
+        // Gate::authorize('form', Plug::class);
 
-        $orders = Order::select('id', 'product_id')->get();
         return [
-            'orders' => $orders,
-            'icon' => $this -> icon,
-            'title' => $this -> title,
+            'icon' => $this->icon,
+            'title' => $this->title,
         ];
     }
 
@@ -149,74 +154,79 @@ class CutController extends Controller
         $responses = $this->form();
         $responses = array_merge($responses, []);
 
-        return Inertia::render('dashboard/Cuts/Form', $responses);
+        return Inertia::render('dashboard/Plugs/Form', $responses);
     }
 
-    
+
     //. -------------------------------------------------------------------------- */
     //.                                    store                                   */
     //. -------------------------------------------------------------------------- */
-    public function store(CutRequest $request)
+    public function store(PlugRequest $request)
     {
-        $cutData = $request->validated();
+        $plugData = $request->validated();
 
-        Cut::create($cutData);
+        Plug::create($plugData);
 
-        return redirect()->route('dashboard.cuts.index')->with('message', 'Cut created successfully.');
+        return redirect()->route('dashboard.plugs.index')->with('message', 'Plug created successfully.');
     }
 
     //. -------------------------------------------------------------------------- */
     //.                                    show                                    */
     //. -------------------------------------------------------------------------- */
-    public function show(Cut $cut)
+    public function show(Plug $plug)
     {
         $responses = $this->form();
 
-        $cut->load(['createdBy']);
+        if ($plug && $plug->relationLoaded('createdBy')) {
+            $plug->load(['createdBy']);
+        }
+        //or/ $plug?->load($plug->relationLoaded('createdBy') ? ['createdBy'] : []);
         $responses = array_merge($responses, [
-            'cut' => $cut,
+            'plug' => $plug,
         ]);
 
-        return Inertia::render('dashboard/Cuts/Form', $responses);
+        return Inertia::render('dashboard/Plugs/Form', $responses);
     }
 
     //. -------------------------------------------------------------------------- */
     //.                                    edit                                    */
     //. -------------------------------------------------------------------------- */
-    public function edit(Cut $cut)
+    public function edit(Plug $plug)
     {
         $responses = $this->form();
 
-        $cut->load(['order', 'createdBy']);
+        if ($plug && $plug->relationLoaded('createdBy')) {
+            $plug->load(['createdBy']);
+        }
         $responses = array_merge($responses, [
-            'cut' => $cut,
+            'plug' => $plug,
         ]);
-        return Inertia::render('dashboard/Cuts/Form', $responses);
+        return Inertia::render('dashboard/Plugs/Form', $responses);
     }
 
     //. -------------------------------------------------------------------------- */
     //.                                   update                                   */
     //. -------------------------------------------------------------------------- */
-    public function update(CutRequest $request, Cut $cut)
+    public function update(PlugRequest $request, Plug $plug)
     {
-        
 
-        $cutData = $request->validated();
 
-        $cut->update($cutData);
+        $plugData = $request->validated();
 
-        return redirect()->route('dashboard.cuts.index')->with('message', 'Cut updated successfully.');
+        $plug->update($plugData);
+
+        return redirect()->route('dashboard.plugs.index')->with('message', 'Plug updated successfully.');
     }
 
     //. -------------------------------------------------------------------------- */
     //.                                   destroy                                  */
     //. -------------------------------------------------------------------------- */
-    public function destroy(Cut $cut)
+    public function destroy(Plug $plug)
     {
-        $cut->delete();
+        $plug->delete();
 
-        return redirect()->route('dashboard.cuts.index')
-            ->with('success', 'Cut deleted successfully.');
+        return redirect()->route('dashboard.plugs.index')
+            ->with('success', 'Plug deleted successfully.');
     }
 
 
@@ -248,11 +258,11 @@ class CutController extends Controller
             );
         }
 
-        Cut::whereIn('id', $ids)->delete();
+        Plug::whereIn('id', $ids)->delete();
 
         return redirect()->route($thisIndexRoute, [
             'page' => $request->page,
             'perPage' => $request->perPage,
-        ])->with('success', 'Selected cuts deleted successfully.');
+        ])->with('success', 'Selected plugs deleted successfully.');
     }
 }
