@@ -129,7 +129,7 @@ import { route } from 'ziggy-js';
 //. Layouts
 import PanelLayout from '@/layouts/PanelLayout.vue';
 //. Components
-import TitleInPanel from '@/components/TitleInPanel.vue';
+import TitleInPanel from '@/Components/TitleInPanel.vue';
 import IndexQuery from '@/components/IndexQuery.vue';
 //. Composables
 import { useSafeRoute } from '@/Composables/useSafeRoute';

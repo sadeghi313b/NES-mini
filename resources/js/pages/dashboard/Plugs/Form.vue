@@ -19,7 +19,7 @@
             <clg
                 where=""
                 :vars="{
-                    'page.props.plug': page.props.plug,
+                    'page.props.record': page.props.record,
                 }"
             />
         </template>
@@ -90,13 +90,13 @@
                                         v-if="routeMethod != 'create' && page.props.columns?.created_by"
                                         outline
                                         color="secondary"
-                                        :label="`created by : ${page.props.plug.created_by.full_name}  ${page.props.plug.created_at}`"
+                                        :label="`created by : ${page.props.record.created_by.full_name}  ${page.props.record.created_at}`"
                                     />
                                     <q-badge
-                                        v-if="routeMethod != 'create' && page.props.plug.updated_at"
+                                        v-if="routeMethod != 'create' && page.props.record.updated_at"
                                         outline
                                         color="secondary"
-                                        :label="`updated at : ${page.props.plug.updated_at}`"
+                                        :label="`updated at : ${page.props.record.updated_at}`"
                                     />
                                 </div>
                             </q-form>
@@ -146,9 +146,9 @@ const readonly = computed(() => {
 /*                                   useform                                  */
 /* -------------------------------------------------------------------------- */
 const form = useForm({
-    type: page.props.plug?.type ?? null,
-    tag: page.props.plug?.tag ?? null,
-    description: page.props.plug?.description ?? '',
+    type: page.props.record?.type ?? null,
+    tag: page.props.record?.tag ?? null,
+    description: page.props.record?.description ?? '',
 });
 
 /* -------------------------------------------------------------------------- */
@@ -167,11 +167,11 @@ const submitForm = () => {
             });
             break;
         case 'edit':
-            if (!page.props.plug?.id) {
+            if (!page.props.record?.id) {
                 console.error('Plug ID is missing');
                 return;
             }
-            form.put(`/dashboard/plugs/${page.props.plug.id}`, {
+            form.put(`/dashboard/plugs/${page.props.record.id}`, {
                 preserveState: true,
                 preserveScroll: true,
                 onSuccess: () => {

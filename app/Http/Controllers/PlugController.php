@@ -134,76 +134,67 @@ class PlugController extends Controller  implements HasMiddleware
 
 
     //. -------------------------------------------------------------------------- */
-    //.                                   create                                   */
-    //. -------------------------------------------------------------------------- */
-    public function create()
-    {
-        $response = $this->form();
-        $response = array_merge($response, []);
-
-        return Inertia::render($this->basePath['pages'] . 'Form', $response);
-    }
-
-
-    //. -------------------------------------------------------------------------- */
     //.                                    store                                   */
     //. -------------------------------------------------------------------------- */
-    public function store(PlugRequest $request)
-    {
-        $plugData = $request->validated();
+    // public function store(PlugRequest $request)
+    // {
+    //     return $this->genericStore($request);
+    // }
 
-        Plug::create($plugData);
-
-        return redirect()->route('dashboard.plugs.index')->with('message', 'Plug created successfully.');
-    }
+    
 
     //. -------------------------------------------------------------------------- */
     //.                                    show                                    */
     //. -------------------------------------------------------------------------- */
-    public function show(Plug $plug)
-    {
-        $response = $this->form();
+    // public function show(Plug $plug)
+    // {
+    //     $record = $plug;
+    //     $response = $this->form();
 
-        if ($plug && $plug->relationLoaded('createdBy')) {
-            $plug->load(['createdBy']);
-        }
-        //or/ $plug?->load($plug->relationLoaded('createdBy') ? ['createdBy'] : []);
-        $response = array_merge($response, [
-            'plug' => $plug,
-        ]);
+    //     if ($record && $record?->relationLoaded('createdBy')) {
+    //         $record->load(['createdBy']);
+    //     }
+    //     //or/ $record?->load($record->relationLoaded('createdBy') ? ['createdBy'] : []);
 
-        return Inertia::render($this->basePath['pages'] . 'Form', $response);
-    }
+    //     $response = array_merge($response, [
+    //         'record' => $record,
+    //     ]);
+    //     // mydump($response);
+
+    //     return Inertia::render($this->basePath['pages'] . 'Form', $response);
+    // }
 
     //. -------------------------------------------------------------------------- */
     //.                                    edit                                    */
     //. -------------------------------------------------------------------------- */
-    public function edit(Plug $plug)
-    {
-        $response = $this->form();
+    // public function edit(Plug $plug)
+    // {
+    //     $response = $this->form();
 
-        if ($plug && $plug->relationLoaded('createdBy')) {
-            $plug->load(['createdBy']);
-        }
-        $response = array_merge($response, [
-            'plug' => $plug,
-        ]);
-        return Inertia::render($this->basePath['pages'] . 'Form', $response);
-    }
+    //     if ($plug && $plug->relationLoaded('createdBy')) {
+    //         $plug->load(['createdBy']);
+    //     }
+    //     $response = array_merge($response, [
+    //         'plug' => $plug,
+    //     ]);
+    //     return Inertia::render($this->basePath['pages'] . 'Form', $response);
+    // }
 
     //. -------------------------------------------------------------------------- */
     //.                                   update                                   */
     //. -------------------------------------------------------------------------- */
-    public function update(PlugRequest $request, Plug $plug)
-    {
+    // public function update(PlugRequest $request, Plug $plug)
+    // {
 
 
-        $plugData = $request->validated();
+    //     $plugData = $request->validated();
 
-        $plug->update($plugData);
+    //     $plug->update($plugData);
 
-        return redirect()->route('dashboard.plugs.index')->with('message', 'Plug updated successfully.');
-    }
+    //     return redirect()
+    //         ->route($this->basePath['routes'] . 'index')
+    //         ->with('message', 'Plug updated successfully.');
+    // }
 
     //. -------------------------------------------------------------------------- */
     //.                                   destroy                                  */
@@ -212,7 +203,8 @@ class PlugController extends Controller  implements HasMiddleware
     {
         $plug->delete();
 
-        return redirect()->route('dashboard.plugs.index')
+        return redirect()
+            ->route($this->basePath['routes'] . 'index')
             ->with('success', 'Plug deleted successfully.');
     }
 }

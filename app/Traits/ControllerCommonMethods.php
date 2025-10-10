@@ -2,9 +2,13 @@
 
 namespace App\Traits;
 
+use App\Http\Requests\PlugRequest;
+use App\Models\Plug;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
 
 trait ControllerCommonMethods
 {
@@ -61,7 +65,7 @@ trait ControllerCommonMethods
     //. -------------------------------------------------------------------------- */
     //.                                    store                                   */
     //. -------------------------------------------------------------------------- */
-    public function store(Request $request)
+    public function genericStore($request): RedirectResponse
     {
         $data = $request->validated();
 
@@ -69,7 +73,115 @@ trait ControllerCommonMethods
         $modelClass::create($data);
 
         $successMessage = Str::singular(class_basename($modelClass)) . ' created successfully';
-        return redirect()->route($this->basePath['routes'] . 'index')->with('success', $successMessage);
+
+        return redirect()
+            ->route($this->basePath['routes'] . 'index')
+            ->with('message', $successMessage);
+    }
+
+    public function store(Request $baseRequest)
+    {
+        $modelClass   = $this->modelClass;
+        $requestClass = $this->requestClass;
+
+        // Dynamically instantiate and validate request
+        /** @var \Illuminate\Foundation\Http\FormRequest $request */
+        $request = App::make($requestClass);
+        $request = $request->setContainer(app())->setRedirector(app('redirect'));
+
+        $data = $request->validated();
+
+        $modelClass::create($data);
+
+        $successMessage = Str::singular(class_basename($modelClass)) . ' created successfully.';
+
+        return redirect()
+            ->route($this->basePath['routes'] . 'index')
+            ->with('message', $successMessage);
+    }
+
+
+    //. -------------------------------------------------------------------------- */
+    //.                                    show                                    */
+    //. -------------------------------------------------------------------------- */
+    public function show($model)
+    {
+        $response = $this->form();
+
+        // Load relation if needed
+        // if ($model && $model?->relationLoaded('createdBy')) {
+        //     $model->load(['createdBy']);
+        // }
+
+
+        $modelClass = $this->modelClass ?? $this->getModelClass();
+        $response = array_merge($response, [
+            'record' => $modelClass::findOrFail($model),
+        ]);
+
+        return Inertia::render($this->basePath['pages'] . 'Form', $response);
+    }
+
+
+    //. -------------------------------------------------------------------------- */
+    //.                                    edit                                    */
+    //. -------------------------------------------------------------------------- */
+    public function edit($model)
+    {
+        $modelClass = $this->modelClass;
+        $record = $modelClass::findOrFail($model);
+
+        $response = $this->form();
+
+        if ($record && $record->relationLoaded('createdBy')) {
+            $record->load(['createdBy']);
+        }
+
+        $response = array_merge($response, [
+            'record' => $record,
+        ]);
+
+        return Inertia::render($this->basePath['pages'] . 'Form', $response);
+    }
+
+
+    //. -------------------------------------------------------------------------- */
+    //.                                   update                                   */
+    //. -------------------------------------------------------------------------- */
+    public function update($model, Request $baseRequest)
+    {
+        $modelClass   = $this->modelClass;
+        $requestClass = $this->requestClass; //eg: \App\Http\Requests\PlugRequest
+
+        // make an instance from related Request
+        $request = App::make($requestClass);
+        $request = $request->setContainer(app())
+            ->setRedirector(app('redirect'));
+
+        $data = $request->validated();
+
+        $record = $modelClass::findOrFail($model);
+        $record->update($data);
+
+        return redirect()
+            ->route($this->basePath['routes'] . 'index')
+            ->with('message', class_basename($modelClass) . ' updated successfully.');
+    }
+
+
+    //. -------------------------------------------------------------------------- */
+    //.                                   destroy                                  */
+    //. -------------------------------------------------------------------------- */
+    public function destroy($model)
+    {
+        $modelClass = $this->modelClass;
+        $record = $modelClass::findOrFail($model);
+
+        $record->delete();
+
+        return redirect()
+            ->route($this->basePath['routes'] . 'index')
+            ->with('message', class_basename($modelClass) . ' deleted successfully.');
     }
 
 
