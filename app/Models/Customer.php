@@ -13,6 +13,7 @@ class Customer extends Model
     protected $guarded = ['id','created_by'];
 
     protected $casts = [
+        'tags' => 'array',
         'status' => 'boolean',
         'created_at' => 'datetime:Y/m/d H:i',
         'updated_at' => 'datetime:Y/m/d H:i',

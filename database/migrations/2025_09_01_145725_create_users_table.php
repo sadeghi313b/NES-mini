@@ -13,39 +13,34 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->enum('gender', ['male', 'female']);
-            $table->string('first_name', 255);
-            $table->string('last_name', 255);
-            $table->string('email', 255)->unique();
-            $table->text('password');
+            $table->enum('gender', ['male', 'female'])->nullable();
+            $table->string('first_name', 255)->nullable();
+            $table->string('last_name', 255)->nullable();
+            $table->string('email', 255)->nullable(); 
+            $table->text('password')->nullable();
             $table->timestamp('email_verified_at')->nullable();
-            $table->rememberToken();
-            $table->boolean('status')->default(true);
+            $table->rememberToken()->nullable();
+            $table->boolean('status')->default(true)->nullable();
             $table->text('description')->nullable();
-            $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
-            $table->timestamps();
-            $table->softDeletes();
-            
-            // Indexes
-            $table->index(['gender']);
-            $table->index(['first_name']);
-            $table->index(['last_name']);
-            $table->index(['email']);
+            $table->unsignedInteger('created_by')->nullable(); 
+            $table->timestamps()->nullable();
+            $table->softDeletes()->nullable();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
-            $table->string('email')->primary();
-            $table->string('token');
+            $table->string('email')->primary(); 
+            $table->string('token')->nullable();
             $table->timestamp('created_at')->nullable();
         });
 
         Schema::create('sessions', function (Blueprint $table) {
-            $table->string('id')->primary();
-            $table->foreignId('user_id')->nullable()->index();
+            $table->string('id')->primary(); 
+            $table->unsignedInteger('user_id')->nullable(); 
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
-            $table->longText('payload');
-            $table->integer('last_activity')->index();
+            $table->longText('payload')->nullable();
+            $table->integer('last_activity')->nullable();
+            
         });
     }
 

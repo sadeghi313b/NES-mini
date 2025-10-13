@@ -11,18 +11,16 @@ return new class extends Migration
         if (!Schema::hasTable('activities')) {
             Schema::create('activities', function (Blueprint $table) {
                 $table->id();
-                $table->string('name', 255);
+                $table->string('name', 255)->nullable(); //!changed/
                 // $table->string('interchangable_category', 255)->nullable();
 
                 $table->text('description')->nullable();
-                $table->boolean('status')->default(true);
-                $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
+                $table->boolean('status')->nullable(); //!changed/
+                $table->unsignedInteger('created_by')->nullable(); //!changed/
                 $table->timestamps();
                 $table->softDeletes();
 
-                // Indexes
-                $table->index(['name']);
-                // $table->index(['interchangable_category']);
+                // Indexes removed
             });
         }
     }

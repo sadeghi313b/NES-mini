@@ -102,11 +102,7 @@
                 </template>
             </q-table>
             <!-- temp -->
-            <clg
-                :vars="{
-                    
-                }"
-            />
+            <clg :vars="{}" />
         </q-page>
     </panel-layout>
 </template>
@@ -236,9 +232,6 @@ const getSelectedString = () => {
 /* -------------------------------------------------------------------------- */
 const separator = ref('cell');
 const visibleColumns = ref(columns.map((c) => c.name));
-//todo const visibleColumns = computed(() => {
-//   return columns.value ? columns.value.map(c => c.name) : [];
-// });
 const gridMode = ref(false);
 const loading = ref(false);
 const toggleGrid = () => {
@@ -280,7 +273,6 @@ const onDelete = () => {
             onSuccess: () => {
                 $q.notify({
                     color: 'positive',
-                    // message: `row${s} deleted successfully` ,
                     message: flash?.success || `row${s} ${ids} deleted successfully`,
                 });
                 selectedRows.value = [];
@@ -310,8 +302,9 @@ const exportCsv = () => {
 
 <style lang="scss">
 .my-sticky-header-table {
-    height: 90vh;
+    // height: 90vh;
     .q-table__top,
+    .q-table__bottom,
     thead tr:first-child th {
         background-color: #00b4ff;
     }

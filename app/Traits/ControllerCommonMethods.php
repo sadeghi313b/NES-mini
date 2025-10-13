@@ -2,8 +2,6 @@
 
 namespace App\Traits;
 
-use App\Http\Requests\PlugRequest;
-use App\Models\Plug;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
@@ -18,12 +16,27 @@ trait ControllerCommonMethods
         $modelName = Str::replaceLast('Controller', '', $controllerName);
         return "App\\Models\\{$modelName}";
     }
+    
+    protected function getRequestClass()
+    {
+        $controllerName = class_basename($this);
+        $requestClassName = Str::replaceLast('Controller', 'Request', $controllerName);
+        return "App\\Http\\Requests\\{$requestClassName}";
+    }
+
+    protected function getResourceClass()
+    {
+        $controllerName = class_basename($this);
+        $resourceClassName = Str::replaceLast('Controller', 'Resource', $controllerName);
+        return "App\\Http\\Resources\\{$resourceClassName}";
+    }
 
     //. -------------------------------------------------------------------------- */
     //.                                 pagination                                 */
     //. -------------------------------------------------------------------------- */
-    protected function paginator(Request $request, $query, $resourceClass)
+    protected function paginator(Request $request, $query)
     {
+        $resourceClass = $this->resourceClass ?? $this->getResourceClass();
         $paginationCookie = $this->getPaginationCookie($request);
 
         $rawPerPage = $paginationCookie['perPage'] ?: $request->input('perPage', 5);
@@ -65,24 +78,10 @@ trait ControllerCommonMethods
     //. -------------------------------------------------------------------------- */
     //.                                    store                                   */
     //. -------------------------------------------------------------------------- */
-    public function genericStore($request): RedirectResponse
+    public function store()
     {
-        $data = $request->validated();
-
-        $modelClass = $this->modelClass ?? $this->getModelClass();
-        $modelClass::create($data);
-
-        $successMessage = Str::singular(class_basename($modelClass)) . ' created successfully';
-
-        return redirect()
-            ->route($this->basePath['routes'] . 'index')
-            ->with('message', $successMessage);
-    }
-
-    public function store(Request $baseRequest)
-    {
-        $modelClass   = $this->modelClass;
-        $requestClass = $this->requestClass;
+        $modelClass   = $this->modelClass ?? $this->getModelClass();
+        $requestClass = $this->requestClass ?? $this->getRequestClass();
 
         // Dynamically instantiate and validate request
         /** @var \Illuminate\Foundation\Http\FormRequest $request */
@@ -104,19 +103,19 @@ trait ControllerCommonMethods
     //. -------------------------------------------------------------------------- */
     //.                                    show                                    */
     //. -------------------------------------------------------------------------- */
-    public function show($model)
+    public function show($id)
     {
         $response = $this->form();
 
         // Load relation if needed
-        // if ($model && $model?->relationLoaded('createdBy')) {
-        //     $model->load(['createdBy']);
+        // if ($id && $id?->relationLoaded('createdBy')) {
+        //     $id->load(['createdBy']);
         // }
 
 
         $modelClass = $this->modelClass ?? $this->getModelClass();
         $response = array_merge($response, [
-            'record' => $modelClass::findOrFail($model),
+            'record' => $modelClass::findOrFail($id),
         ]);
 
         return Inertia::render($this->basePath['pages'] . 'Form', $response);
@@ -126,10 +125,10 @@ trait ControllerCommonMethods
     //. -------------------------------------------------------------------------- */
     //.                                    edit                                    */
     //. -------------------------------------------------------------------------- */
-    public function edit($model)
+    public function edit($id)
     {
-        $modelClass = $this->modelClass;
-        $record = $modelClass::findOrFail($model);
+        $modelClass = $this->modelClass ?? $this->getModelClass();
+        $record = $modelClass::findOrFail($id);
 
         $response = $this->form();
 
@@ -148,10 +147,10 @@ trait ControllerCommonMethods
     //. -------------------------------------------------------------------------- */
     //.                                   update                                   */
     //. -------------------------------------------------------------------------- */
-    public function update($model, Request $baseRequest)
+    public function update($id)
     {
-        $modelClass   = $this->modelClass;
-        $requestClass = $this->requestClass; //eg: \App\Http\Requests\PlugRequest
+        $modelClass   = $this->modelClass ?? $this->getModelClass();
+        $requestClass = $this->requestClass ?? $this->getRequestClass(); //eg: \App\Http\Requests\PlugRequest
 
         // make an instance from related Request
         $request = App::make($requestClass);
@@ -160,7 +159,7 @@ trait ControllerCommonMethods
 
         $data = $request->validated();
 
-        $record = $modelClass::findOrFail($model);
+        $record = $modelClass::findOrFail($id);
         $record->update($data);
 
         return redirect()
@@ -172,10 +171,10 @@ trait ControllerCommonMethods
     //. -------------------------------------------------------------------------- */
     //.                                   destroy                                  */
     //. -------------------------------------------------------------------------- */
-    public function destroy($model)
+    public function destroy($id)
     {
-        $modelClass = $this->modelClass;
-        $record = $modelClass::findOrFail($model);
+        $modelClass = $this->modelClass ?? $this->getModelClass();
+        $record = $modelClass::findOrFail($id);
 
         $record->delete();
 
@@ -213,7 +212,7 @@ trait ControllerCommonMethods
 
         /* --------------------------------- success -------------------------------- */
         $modelClass = $this->modelClass ?? $this->getModelClass();
-        $modelClass::whereIn('id', $ids)->delete();
+        $modelClass::whereKey($ids)->delete();
 
         return redirect()->route($this->basePath['routes'] . 'index', [
             'page' => $request->page,

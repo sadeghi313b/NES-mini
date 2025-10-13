@@ -10,24 +10,17 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
-            $table->foreignId('month_id')->constrained('months')->onDelete('cascade');
-            $table->unsignedMediumInteger('quantity');
-            $table->date('notification_date');
-            $table->boolean('seen')->default(false);
-            $table->enum('status', ['active', 'force', 'hold', 'canceled', 'enough'])->default('active');
+            $table->unsignedInteger('product_id')->nullable(); 
+            $table->unsignedInteger('month_id')->nullable(); 
+            $table->unsignedMediumInteger('quantity')->nullable(); 
+            $table->date('notification_date')->nullable(); 
+            $table->boolean('seen')->nullable(); 
+            $table->enum('status', ['active', 'force', 'hold', 'canceled', 'enough'])->nullable(); 
 
             $table->text('description')->nullable();
-            $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->unsignedInteger('created_by')->nullable(); 
             $table->timestamps();
             $table->softDeletes();
-            
-            // Indexes
-            $table->index(['product_id']);
-            $table->index(['month_id']);
-            $table->index(['notification_date']);
-            $table->index(['status']);
-            $table->index(['seen']);
         });
     }
 

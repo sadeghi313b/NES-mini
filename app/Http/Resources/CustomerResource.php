@@ -19,6 +19,7 @@ class CustomerResource extends JsonResource
             'name' => $this->name,
             'description' => $this->description,
             'tags' => $this->tags,
+            'status' => $this->status,
             'created_by_id' => $this->createdBy?->id,
             'created_by_full_name' => $this->createdBy?->full_name,
             'created_at' => $this->created_at,
@@ -65,6 +66,13 @@ class CustomerResource extends JsonResource
                 'label' => 'Tags',
                 'field' => 'tags',
                 'align' => 'left',
+                'sortable' => true
+            ],
+            [
+                'name' => 'status',
+                'label' => 'status',
+                'field' => 'status',
+                'align' => 'center',
                 'sortable' => true
             ],
             [

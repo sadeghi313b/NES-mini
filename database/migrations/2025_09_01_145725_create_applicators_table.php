@@ -11,10 +11,10 @@ return new class extends Migration
         if (!Schema::hasTable('applicators')) {
             Schema::create('applicators', function (Blueprint $table) {
                 $table->id();
-                $table->string('name', 255);
+                $table->string('name', 255)->nullable();
                 $table->text('description')->nullable();
                 $table->boolean('status')->default(true);
-                $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
+                $table->unsignedSmallInteger('created_by')->nullable();
                 $table->timestamps();
                 $table->softDeletes();
             });

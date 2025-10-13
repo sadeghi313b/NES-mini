@@ -14,7 +14,15 @@ class User extends Authenticatable
     use HasFactory, Notifiable, SoftDeletes;
     use GetFields;
 
+    /* -------------------------------------------------------------------------- */
+    /*                                 definitions                                */
+    /* -------------------------------------------------------------------------- */
     const GENDERS = ['male', 'female'];
+
+
+    /* -------------------------------------------------------------------------- */
+    /*                         fiilables & hiddens & casts                        */
+    /* -------------------------------------------------------------------------- */
     protected $guarded = ['id', 'created_by'];
 
     protected $hidden = [
@@ -45,6 +53,7 @@ class User extends Authenticatable
     /* -------------------------------------------------------------------------- */
     /*                                Relationships                               */
     /* -------------------------------------------------------------------------- */
+    /* ---------------------------------- role ---------------------------------- */
     public function roles()
     {
         return $this->belongsToMany(Role::class)
@@ -68,6 +77,7 @@ class User extends Authenticatable
         return false;
     }
 
+    /* --------------------------------- phones --------------------------------- */
     public function phones()
     {
         return $this->hasMany(Phone::class)
@@ -75,16 +85,21 @@ class User extends Authenticatable
         ;
     }
 
+    /* -------------------------------- employee -------------------------------- */
     public function employee()
     {
         return $this->hasOne(Employee::class);
     }
 
+    /* ------------------------------- created by ------------------------------- */
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    /* -------------------------------------------------------------------------- */
+    /*                                    boot                                    */
+    /* -------------------------------------------------------------------------- */
     protected static function boot()
     {
         parent::boot();

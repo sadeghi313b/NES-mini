@@ -10,18 +10,16 @@ return new class extends Migration
     {
         Schema::create('sub_departments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('department_id')->constrained('departments')->onDelete('cascade');
-            $table->string('name', 255);
-            
+            $table->unsignedInteger('department_id')->nullable(); //!changed/
+            $table->string('name', 255)->nullable(); //!changed/
+
             $table->text('description')->nullable();
-            $table->boolean('status')->default(true);
-            $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->boolean('status')->nullable(); //!changed/
+            $table->unsignedInteger('created_by')->nullable(); //!changed/
             $table->timestamps();
             $table->softDeletes();
-            
-            // Indexes
-            $table->index(['department_id']);
-            $table->index(['name']);
+
+            // Indexes removed
         });
     }
 

@@ -10,18 +10,14 @@ return new class extends Migration
     {
         Schema::create('customers', function (Blueprint $table) {
             $table->id();
-            $table->string('name'); // not null
+            $table->string('name')->nullable();
             $table->text('description')->nullable();
-            $table->string('tags')->nullable();
-            $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
-            
+            $table->json('tags')->nullable(); // array
+            $table->boolean('status')->nullable();
+            $table->unsignedInteger('created_by')->nullable();
+
             $table->timestamps();
             $table->softDeletes();
-
-            // Indexes
-            $table->index(['user_id']);
-            $table->index(['name']);
-            $table->index(['tags']);
         });
     }
 

@@ -10,19 +10,17 @@ return new class extends Migration
     {
         Schema::create('cycletimes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
-            $table->foreignId('activity_id')->constrained('activities')->onDelete('cascade');
-            $table->float('cycletime', 8, 2); // between 1 to 10 with 2 decimal
+            $table->unsignedInteger('product_id')->nullable(); //!changed/
+            $table->unsignedInteger('activity_id')->nullable(); //!changed/
+            $table->float('cycletime', 8, 2)->nullable(); //!changed/
 
             $table->text('description')->nullable();
-            $table->boolean('status')->default(true);
-            $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->boolean('status')->nullable(); //!changed/
+            $table->unsignedInteger('created_by')->nullable(); //!changed/
             $table->timestamps();
             $table->softDeletes();
-            
-            // Indexes
-            $table->index(['product_id']);
-            $table->index(['activity_id']);
+
+            // Indexes removed
         });
     }
 

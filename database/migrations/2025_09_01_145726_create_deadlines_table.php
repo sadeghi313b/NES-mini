@@ -10,19 +10,15 @@ return new class extends Migration
     {
         Schema::create('deadlines', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('order_id')->constrained('orders')->onDelete('cascade');
-            $table->unsignedMediumInteger('part_quantity');
-            $table->date('due_date');
+            $table->unsignedInteger('order_id')->nullable(); 
+            $table->unsignedMediumInteger('part_quantity')->nullable(); 
+            $table->date('due_date')->nullable(); 
 
             $table->text('description')->nullable();
-            $table->boolean('status')->default(true);
-            $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->boolean('status')->nullable(); 
+            $table->unsignedInteger('created_by')->nullable(); 
             $table->timestamps();
             $table->softDeletes();
-            
-            // Indexes
-            $table->index(['order_id']);
-            $table->index(['due_date']);
         });
     }
 

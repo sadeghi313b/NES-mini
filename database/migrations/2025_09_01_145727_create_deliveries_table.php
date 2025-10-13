@@ -9,30 +9,26 @@ return new class extends Migration {
     {
         Schema::create('deliveries', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
-            $table->date('date');
-            $table->unsignedMediumInteger('quantity');
+            $table->unsignedInteger('product_id')->nullable(); //!changed/
+            $table->date('date')->nullable(); //!changed/
+            $table->unsignedMediumInteger('quantity')->nullable(); //!changed/
 
             $table->text('description')->nullable();
-            $table->boolean('status')->default(true);
-            $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->boolean('status')->nullable(); //!changed/
+            $table->unsignedInteger('created_by')->nullable(); //!changed/
             $table->timestamps();
             $table->softDeletes();
-
-            // Indexes
-            $table->index(['product_id']);
-            $table->index(['date']);
         });
 
         Schema::create('delivery_order', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('delivery_id')->constrained('deliveries')->onDelete('cascade');
-            $table->foreignId('order_id')->constrained('orders')->onDelete('cascade');
-            $table->unsignedMediumInteger('quantity');
+            $table->unsignedInteger('delivery_id')->nullable(); //!changed/
+            $table->unsignedInteger('order_id')->nullable(); //!changed/
+            $table->unsignedMediumInteger('quantity')->nullable(); //!changed/
 
             $table->text('description')->nullable();
-            $table->boolean('status')->default(true);
-            $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->boolean('status')->nullable(); //!changed/
+            $table->unsignedInteger('created_by')->nullable(); //!changed/
             $table->timestamps();
             $table->softDeletes();
         });

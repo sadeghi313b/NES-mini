@@ -10,27 +10,20 @@ return new class extends Migration
     {
         Schema::create('roles', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 255);
+            $table->string('name', 255)->nullable();
             $table->text('description')->nullable();
-            $table->boolean('status')->default(true);
-            $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
-            $table->timestamps();
-            $table->softDeletes();
-            
-            // Indexes
-            $table->index(['name']);
+            $table->boolean('status')->default(true)->nullable();
+            $table->unsignedInteger('created_by')->nullable(); 
+            $table->timestamps()->nullable();
+            $table->softDeletes()->nullable();
         });
 
         Schema::create('role_user', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('role_id')->constrained('roles')->onDelete('cascade');
-            $table->foreignId('assigned_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->unsignedInteger('user_id')->nullable(); 
+            $table->unsignedInteger('role_id')->nullable();
+            $table->unsignedInteger('assigned_by')->nullable(); 
             $table->timestamp('assigned_at')->nullable();
-            
-            // Unique constraint to prevent duplicate assignments
-            // One user can not has one role by twice in different assigned_at
-            $table->unique(['user_id', 'role_id']);
         });
     }
 

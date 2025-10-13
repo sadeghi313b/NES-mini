@@ -10,21 +10,19 @@ return new class extends Migration
     {
         Schema::create('timesheets', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('employee_id')->constrained('employees')->onDelete('cascade');
-            $table->foreignId('batch_id')->constrained('batches')->onDelete('cascade');
-            $table->foreignId('activity_id')->constrained('activities')->onDelete('cascade');
-            $table->unsignedMediumInteger('quantity');
-            $table->date('date');
+            $table->unsignedInteger('employee_id')->nullable(); //!changed/
+            $table->unsignedInteger('batch_id')->nullable(); //!changed/
+            $table->unsignedInteger('activity_id')->nullable(); //!changed/
+            $table->unsignedMediumInteger('quantity')->nullable(); //!changed/
+            $table->date('date')->nullable(); //!changed/
 
             $table->text('description')->nullable();
-            $table->boolean('status')->default(true);
-            $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->boolean('status')->nullable(); //!changed/
+            $table->unsignedInteger('created_by')->nullable(); //!changed/
             $table->timestamps();
             $table->softDeletes();
-            
-            // Indexes
-            $table->index(['employee_id']);
-            $table->index(['date']);
+
+            // Indexes removed
         });
     }
 

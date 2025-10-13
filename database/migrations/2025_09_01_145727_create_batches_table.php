@@ -10,18 +10,15 @@ return new class extends Migration
     {
         Schema::create('batches', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('cut_id')->constrained('cuts')->onDelete('cascade');
-            $table->unsignedSmallInteger('quantity');
+            $table->unsignedInteger('cut_id')->nullable(); //!changed/
+            $table->unsignedSmallInteger('quantity')->nullable(); //!changed/
             $table->dateTime('printing_date')->nullable();
 
             $table->text('description')->nullable();
-            $table->boolean('status')->default(true);
-            $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->boolean('status')->nullable(); //!changed/
+            $table->unsignedInteger('created_by')->nullable(); //!changed/
             $table->timestamps();
             $table->softDeletes();
-            
-            // Indexes
-            $table->index(['cut_id']);
         });
     }
 

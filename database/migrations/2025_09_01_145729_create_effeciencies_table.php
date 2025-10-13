@@ -13,7 +13,13 @@ return new class extends Migration
     {
         Schema::create('effeciencies', function (Blueprint $table) {
             $table->id();
+
+            $table->text('description')->nullable();
+            $table->boolean('status')->nullable();
+            $table->unsignedInteger('created_by')->nullable();
+
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

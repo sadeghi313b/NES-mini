@@ -10,18 +10,14 @@ return new class extends Migration
     {
         Schema::create('molds', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 255);
-            $table->enum('category', ['plug', 'cord']);
-            $table->unsignedTinyInteger('number_of_cavity');
+            $table->string('name', 255)->nullable();
+            $table->enum('category', ['plug', 'cord'])->nullable();
+            $table->unsignedTinyInteger('number_of_cavity')->nullable();
             $table->text('description')->nullable();
-            $table->boolean('status')->default(true);
-            $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
-            $table->timestamps();
-            $table->softDeletes();
-            
-            // Indexes
-            $table->index(['category']);
-            $table->index(['number_of_cavity']);
+            $table->boolean('status')->default(true)->nullable();
+            $table->unsignedSmallInteger('created_by')->nullable(); 
+            $table->timestamps()->nullable();
+            $table->softDeletes()->nullable();
         });
     }
 

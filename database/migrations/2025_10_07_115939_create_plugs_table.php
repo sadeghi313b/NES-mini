@@ -13,13 +13,11 @@ return new class extends Migration
             $table->string('type')->nullable();
             $table->text('description')->nullable();
             $table->string('tag')->nullable();
-            
+            $table->boolean('status')->nullable();
+            $table->unsignedInteger('created_by')->nullable();
+
             $table->timestamps();
             $table->softDeletes();
-
-            // Indexes
-            $table->index(['type']);
-            $table->index(['tag']);
         });
     }
 

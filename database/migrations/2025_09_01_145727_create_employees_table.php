@@ -10,23 +10,16 @@ return new class extends Migration
     {
         Schema::create('employees', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('department_id')->constrained('departments')->onDelete('cascade');
-            $table->foreignId('sub_department_id')->constrained('sub_departments')->onDelete('cascade');
-            $table->unsignedSmallInteger('employee_number')->unique();
-            $table->date('hire_date');
+            $table->unsignedInteger('user_id')->nullable(); //!changed/
+            $table->unsignedInteger('department_id')->nullable(); //!changed/
+            $table->unsignedInteger('sub_department_id')->nullable(); //!changed/
+            $table->unsignedSmallInteger('employee_number')->nullable()->unique(); //!changed/
+            $table->date('hire_date')->nullable(); //!changed/
             $table->text('description')->nullable();
-            $table->boolean('status')->default(true);
-            $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->boolean('status')->nullable(); //!changed/
+            $table->unsignedInteger('created_by')->nullable(); //!changed/
             $table->timestamps();
             $table->softDeletes();
-            
-            // Indexes
-            $table->index(['user_id']);
-            $table->index(['department_id']);
-            $table->index(['sub_department_id']);
-            $table->index(['employee_number']);
-            $table->index(['hire_date']);
         });
     }
 
