@@ -23,8 +23,8 @@ return new class extends Migration
             $table->boolean('status')->default(true)->nullable();
             $table->text('description')->nullable();
             $table->unsignedInteger('created_by')->nullable(); 
-            $table->timestamps()->nullable();
-            $table->softDeletes()->nullable();
+            $table->timestamps();
+            $table->softDeletes();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

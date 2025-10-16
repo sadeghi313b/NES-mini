@@ -21,8 +21,8 @@ return new class extends Migration
             $table->json('tags')->nullable()->comment('filterable'); // Stores tags as JSON array
             $table->unsignedInteger('created_by')->nullable();
 
-            $table->timestamps()->nullable(); // creates created_at and updated_at
-            $table->softDeletes()->nullable(); // creates deleted_at
+            $table->timestamps(); // creates created_at and updated_at
+            $table->softDeletes(); // creates deleted_at
         });
     }
 
