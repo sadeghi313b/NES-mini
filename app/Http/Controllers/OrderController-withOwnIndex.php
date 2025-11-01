@@ -155,7 +155,7 @@ class OrderController extends Controller
         $months = Month::select('id', 'name')->get();
         return [
             'statusOptions' => $this->statusOptions,
-            'months' => $months,
+            'months' => $months, q
             'products' => $products,
         ];
     }

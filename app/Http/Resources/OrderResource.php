@@ -13,13 +13,23 @@ class OrderResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            ...parent::toArray($request), //TODO: parse this line
-            'status' => $this->status->label(),
-            // 'seen' => $this->seen ? 'Seen' : 'unSeen',
-            'seen' => $this->seenLabel,
-            'product' => $this->product?->id,
+            //   \...parent::toArray($request),
+            'id' => $this->id,
+            'product' => $this->product_id,
+            'carried' => $this->carried_id,
+            'idd' => $this->idd,
             'month' => $this->month?->name,
+            'quantity' => $this->quantity,
+            'notification_date' => $this->notification_date,
+            'seen' => $this->seenLabel,
+            'status' => $this->status->label(),
+            'tags' => $this->tags,
+            'description' => $this->description,
+            'fiscal_year' => $this->fiscal_year,
             'created_by' => $this?->createdBy?->full_name,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
+            'deleted_at' => $this->deleted_at,
         ];
     }
 
@@ -67,13 +77,6 @@ class OrderResource extends JsonResource
                 'name' => 'notification_date',
                 'label' => 'Notification Date',
                 'field' => 'notification_date',
-                'align' => 'left',
-                'sortable' => true
-            ],
-            [
-                'name' => 'status',
-                'label' => 'Status',
-                'field' => 'status',
                 'align' => 'center',
                 'sortable' => true
             ],
@@ -85,10 +88,17 @@ class OrderResource extends JsonResource
                 'sortable' => true
             ],
             [
-                'name' => 'created_by',
-                'label' => 'Created By',
-                'field' => 'created_by',
-                'align' => 'left',
+                'name' => 'status',
+                'label' => 'Status',
+                'field' => 'status',
+                'align' => 'center',
+                'sortable' => true
+            ],
+            [
+                'name' => 'tags',
+                'label' => 'Tags',
+                'field' => 'tags',
+                'align' => 'center',
                 'sortable' => true
             ],
             [
@@ -97,6 +107,13 @@ class OrderResource extends JsonResource
                 'field' => 'description',
                 'align' => 'left',
                 'sortable' => false
+            ],
+            [
+                'name' => 'created_by',
+                'label' => 'Created By',
+                'field' => 'created_by',
+                'align' => 'left',
+                'sortable' => true
             ],
             [
                 'name' => 'created_at',

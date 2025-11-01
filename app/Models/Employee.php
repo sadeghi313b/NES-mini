@@ -22,7 +22,9 @@ class Employee extends Model
         'deleted_at' => 'datetime:Y/m/d H:i',
     ];
 
-    // Relationships
+    //. -------------------------------------------------------------------------- */
+    //.                                Relationships                               */
+    //. -------------------------------------------------------------------------- */
     public function user()
     {
         return $this->belongsTo(User::class);

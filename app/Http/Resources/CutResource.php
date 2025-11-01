@@ -16,7 +16,7 @@ class CutResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'order_id' => $this->order?->id,
+            'order_id' => $this->order_id,
             'order_product' => $this->order?->product_id, //searchable
             'order_month' => $this->order?->month?->name, //filterable
             'quantity' => $this->quantity,
@@ -24,6 +24,7 @@ class CutResource extends JsonResource
             'printing_date' => $this->printing_date,
             'cutting_date' => $this->cutting_date,
             'status' => $this->status, //filterable
+            'tags' => $this->tags,
             'description' => $this->description, //searchable
             'created_by_id' => $this->createdBy?->id, //ignor in columns.js
             'created_by_full_name' => $this->createdBy?->full_name, //filterable
@@ -47,6 +48,13 @@ class CutResource extends JsonResource
             ['name' => 'printing_date', 'label' => 'Printing Date', 'field' => 'printing_date', 'align' => 'left', 'sortable' => true],
             ['name' => 'cutting_date', 'label' => 'Cutting Date', 'field' => 'cutting_date', 'align' => 'left', 'sortable' => true],
             ['name' => 'status', 'label' => 'Status', 'field' => 'status', 'align' => 'center', 'sortable' => true],
+            [
+                'name' => 'tags',
+                'label' => 'Tags',
+                'field' => 'tags',
+                'align' => 'center',
+                'sortable' => true
+            ],
             ['name' => 'created_by', 'label' => 'Created By', 'field' => 'created_by_fullname', 'align' => 'left', 'sortable' => true],
             ['name' => 'description', 'label' => 'Description', 'field' => 'description', 'align' => 'left', 'sortable' => false],
             ['name' => 'created_at', 'label' => 'Created at', 'field' => 'created_at', 'align' => 'center', 'sortable' => true],

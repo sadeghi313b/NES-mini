@@ -31,7 +31,7 @@
             <div v-if="$page.props.auth?.user?.full_name" class="q-mx-md q-mt-md">
                 {{ $page.props.auth.user.full_name }}
             </div>
-            <q-breadcrumbs class="text-caption text-secondary q-ml-md" active-color="secondary" gutter="none">
+            <q-breadcrumbs class="text-caption q-ml-md text-secondary" active-color="secondary" gutter="none">
                 <template v-slot:separator>
                     <q-icon size="1.5em" name="chevron_right" color="secondary" />
                 </template>
@@ -69,6 +69,101 @@
             <slot name="right-drawer" />
             <q-scroll-area class="fit" :horizontal-thumb-style="{ opacity: 0 }">
                 <q-list padding>
+                    <q-item clickable v-ripple :href="route('home')">
+                        <q-item-section avatar>
+                            <q-icon name="home" />
+                        </q-item-section>
+                        <q-item-section>Home</q-item-section>
+                    </q-item>
+
+                    <q-separator />
+                    
+                    <q-item clickable v-ripple :href="route('dashboard.index')">
+                        <q-item-section avatar>
+                            <q-icon name="dashboard" />
+                        </q-item-section>
+                        <q-item-section>Dashboard</q-item-section>
+                    </q-item>
+
+                    <q-item clickable v-ripple :href="route('dashboard.products.index')">
+                        <q-item-section avatar>
+                            <q-icon name="category" />
+                        </q-item-section>
+                        <q-item-section>Products</q-item-section>
+                    </q-item>
+
+                    <q-item clickable v-ripple :href="route('dashboard.orders.index')">
+                        <q-item-section avatar>
+                            <q-icon name="shopping_cart" />
+                        </q-item-section>
+                        <q-item-section>Orders</q-item-section>
+                    </q-item>
+
+                    <q-item clickable v-ripple :href="route('dashboard.cuts.index')">
+                        <q-item-section avatar>
+                            <q-icon name="content_cut" />
+                        </q-item-section>
+                        <q-item-section>Cuts</q-item-section>
+                    </q-item>
+
+                    <q-item clickable v-ripple :href="route('dashboard.batches.index')">
+                        <q-item-section avatar>
+                            <q-icon name="layers" />
+                        </q-item-section>
+                        <q-item-section>Batches</q-item-section>
+                    </q-item>
+
+                    <q-item clickable v-ripple :href="route('dashboard.activities.index')">
+                        <q-item-section avatar>
+                            <q-icon name="track_changes" />
+                        </q-item-section>
+                        <q-item-section>Activities</q-item-section>
+                    </q-item>
+
+                    <!-- <q-item clickable v-ripple :href="route('dashboard.works.index')">
+                        <q-item-section avatar>
+                            <q-icon name="work" />
+                        </q-item-section>
+                        <q-item-section>Works</q-item-section>
+                    </q-item>
+
+                    <q-item clickable v-ripple :href="route('dashboard.performance.index')">
+                        <q-item-section avatar>
+                            <q-icon name="show_chart" />
+                        </q-item-section>
+                        <q-item-section>Performance</q-item-section>
+                    </q-item> -->
+
+                    <q-item clickable v-ripple :href="route('dashboard.users.index')">
+                        <q-item-section avatar>
+                            <q-icon name="people" />
+                        </q-item-section>
+                        <q-item-section>Users</q-item-section>
+                    </q-item>
+
+                    <q-item clickable v-ripple :href="route('dashboard.phones.index')">
+                        <q-item-section avatar>
+                            <q-icon name="phone" />
+                        </q-item-section>
+                        <q-item-section>Phones</q-item-section>
+                    </q-item>
+
+                    <q-item clickable v-ripple :href="route('dashboard.works.index')">
+                        <q-item-section avatar>
+                            <q-icon name="engineering" />
+                        </q-item-section>
+                        <q-item-section>Works</q-item-section>
+                    </q-item>
+
+                    <q-item clickable v-ripple :href="route('dashboard.productions.index')">
+                        <q-item-section avatar>
+                            <q-icon name="fact_check" />
+                        </q-item-section>
+                        <q-item-section>Producing</q-item-section>
+                    </q-item>
+
+                    <q-separator />
+
                     <q-item clickable v-ripple>
                         <q-item-section avatar>
                             <q-icon name="inbox" />
@@ -92,8 +187,6 @@
 
                         <q-item-section> Send </q-item-section>
                     </q-item>
-
-                    <q-separator />
 
                     <q-item clickable v-ripple>
                         <q-item-section avatar>

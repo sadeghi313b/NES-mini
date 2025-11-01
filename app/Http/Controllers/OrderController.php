@@ -1,25 +1,32 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Enums\OrderStatus;
+
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\OrderResource;
-
-use App\Models\Order;
-use App\Traits\ControllerCommonMethods;
-use App\Traits\CookieHelper;
-
-use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 
-use Illuminate\Routing\Controllers\Middleware;
+use App\Traits\CookieHelper;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
+
+use App\Enums\OrderStatus;
+use App\Models\Deadline;
+use App\Http\Requests\DeadlineRequest;
+use App\Models\Order;
+use App\Http\Requests\OrderRequest;
+use App\Http\Resources\OrderResource;
+use App\Models\Month;
+use App\Models\Product;
+
+
+
 
 class OrderController extends Controller  implements HasMiddleware
 {
     use CookieHelper;
-    use ControllerCommonMethods;
+    use \App\Traits\ControllerCommonMethods;
 
     //. -------------------------------------------------------------------------- */
     //.                                  variables                                 */
@@ -29,17 +36,13 @@ class OrderController extends Controller  implements HasMiddleware
     protected $requestClass = \App\Http\Requests\OrderRequest::class;
     protected $resourceClass = \App\Http\Resources\OrderResource::class;
 
-    protected $basePath = [
-        'routes' => 'dashboard.orders.',
-        'pages' => 'dashboard/Orders/',
-    ];
-
     protected $title = [
         'icons' => ['shopping_cart', 'add_shopping_cart'],
         'texts' => ['Orders'],
     ];
 
     protected $statusOptions; //will get from Enum Class in constructor
+
 
     //. -------------------------------------------------------------------------- */
     //.                                 middleware                                 */
@@ -60,6 +63,7 @@ class OrderController extends Controller  implements HasMiddleware
             ->map(fn($status) => ['label' => $status->label(), 'value' => $status->value])
             ->values();
     }
+
 
     //. -------------------------------------------------------------------------- 
     //.                                    index                                   
@@ -100,6 +104,7 @@ class OrderController extends Controller  implements HasMiddleware
                         ->orderBy('name')
                         ->pluck('name', 'id')
                         ->map(fn($name, $id) => ['label' => $name, 'value' => $id])
+                        ->values()
                         ->toArray()
                 ],
                 'seen' => [
@@ -162,5 +167,143 @@ class OrderController extends Controller  implements HasMiddleware
     }
 
 
-    
+
+
+
+
+    //. -------------------------------------------------------------------------- */
+    //.                                    form                                    */
+    //. -------------------------------------------------------------------------- */
+    protected function form()
+    {
+        $products = Product::select('id', 'name')->get();
+        $productId_options = Product::query()
+            ->orderBy('id') //->take(5)
+            ->get(['id'])
+            ->map(fn($p) => ['value' => $p->id, 'label' => (string) $p->id])
+            ->toArray();
+        $months = Month::select('id', 'name')->get();
+        return [
+            'title' => $this->title,
+            'statusOptions' => $this->statusOptions,
+            'months' => $months,
+            'products' => $productId_options,
+        ];
+    }
+
+    //. -------------------------------------------------------------------------- */
+    //.                                    show                                    */
+    //. -------------------------------------------------------------------------- */
+    public function show(Order $order)
+    {
+        $response = $this->form();
+        $order->load(['createdBy', 'deadlines']);
+
+        $response = array_merge($response, [
+            'record' => $order,
+        ]);
+
+        return Inertia::render($this->basePath['pages'] . 'Form', $response);
+    }
+
+    //. -------------------------------------------------------------------------- */
+    //.                                   create                                   */
+    //. -------------------------------------------------------------------------- */
+    public function create()
+    {
+        $responses = $this->form();
+
+        return Inertia::render('dashboard/Orders/Form', $responses);
+    }
+
+    //. -------------------------------------------------------------------------- */
+    //.                                    store                                   */
+    //. -------------------------------------------------------------------------- */
+    public function store(OrderRequest $orderRequest)
+    {
+        /* ---------------------------- Order Validation ---------------------------- */
+        // $orderData['created_by'] = auth()->id();
+        $orderData = $orderRequest->validated();
+        unset($orderData['deadlines']);
+
+        /* -------------------------- Deadlines Validation -------------------------- */
+        $deadlines = $orderRequest['deadlines'] ?? [];
+        $orderRequest->validate(DeadlineRequest::deadlinesRules());
+
+        /* ---------------------------- Order write  --------------------------------- */
+        $order = Order::create($orderData);
+
+        /* --------------------------- Deadlines write ------------------------------- */
+        if (count($deadlines)) {
+            foreach ($deadlines as $deadline) {
+                if (!empty(array_filter($deadline))) {
+                    Deadline::create([
+                        'order_id' => $order->id,
+                        'promised_quantity' => $deadline['promised_quantity'],
+                        'promised_date' => $deadline['promised_date'],
+                        'description' => $deadline['description'] ?? null,
+                    ]);
+                }
+            }
+        }
+
+        return redirect()->route('dashboard.orders.index')->with('message', 'Order created successfully.');
+    }
+
+
+    //. -------------------------------------------------------------------------- */
+    //.                                    edit                                    */
+    //. -------------------------------------------------------------------------- */
+    public function edit(Order $order)
+    {
+        $responses = $this->form();
+
+        $order->load(['deadlines', 'createdBy']);
+        $responses = array_merge($responses, [
+            'record' => $order,
+        ]);
+        return Inertia::render('dashboard/Orders/Form', $responses);
+    }
+
+
+    //. -------------------------------------------------------------------------- */
+    //.                                   update                                   */
+    //. -------------------------------------------------------------------------- */
+    public function update(OrderRequest $request, Order $order)
+    {
+        Gate::authorize('edit', $order);
+
+        $deadlines = $request['deadlines'] ?? [];
+
+        /* ---------------------------- Order Validation ---------------------------- */
+        $orderData = $request->validated();
+        unset($orderData['deadlines']);
+
+        /* -------------------------- Deadlines Validation -------------------------- */
+        $request->validate(DeadlineRequest::deadlinesRules());
+
+        /* ------------------------------ update order ------------------------------ */
+        // dd($orderData);
+        $order->update($orderData);
+
+        /* ---------------------------- update deadlines ---------------------------- */
+        // $order->deadlines()->delete();
+
+        // ایجاد ددلاین‌های جدید
+        if (count($deadlines)) {
+            foreach ($deadlines as $deadline) {
+                if (!empty(array_filter($deadline))) {
+                    Deadline::create([
+                        'order_id' => $order->id,
+                        'promised_quantity' => $deadline['promised_quantity'],
+                        'promised_date' => $deadline['promised_date'],
+                        'description' => $deadline['description'] ?? null,
+                    ]);
+                }
+            }
+        }
+
+        /* --------------------------------- return --------------------------------- */
+        return redirect()->route('dashboard.orders.index')->with('message', 'Order updated successfully.');
+    }
 }

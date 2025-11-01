@@ -14,6 +14,19 @@ class BatchRequest extends FormRequest
         return true;
     }
 
+    /* -------------------------------------------------------------------------- */
+    /*                                batchesRules                                */
+    /* -------------------------------------------------------------------------- */
+    public static function batchesRules(): array
+    {
+        return [
+            'batches' => 'array',
+            'batches.*.cut_id' => 'nullable|integer|exists:cuts,id',
+            'batches.*.size' => 'nullable|integer',
+            'batches.*.created_by' => 'nullable|integer',
+        ];
+    }
+
     /**
      * Get the validation rules that apply to the request.
      */

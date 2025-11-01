@@ -19,7 +19,11 @@
             <clg
                 where=""
                 :vars="{
-                    'page.props.cut': page.props.cut,
+                    'createBatchRows': createBatchRows ,
+                    'batches.fullsCount': creatingBatches,
+                    'Math.floor': Math.floor(form.quantity / form.maximum_batch_size),
+                    'form.batches': form.batches,
+                    'page.props.record': page.props.record,
                 }"
             />
         </template>
@@ -46,20 +50,18 @@
                                         :readonly="readonly"
                                         label="Order"
                                         :rules="[(val) => (val && val > 0) || 'Field is required']"
-                                        class="q-mb-md col-5"
+                                        class="q-mb-md col-2"
                                     />
                                     <!-- ──────────────────────
                                     ├   Quantity
                                     └─────────────────────── -->
-                                    <q-input
-                                        v-model.number="form.quantity"
-                                        filled
+                                    <QuantityField
+                                        v-model:quantity="form.quantity"
                                         :readonly="readonly"
-                                        type="number"
-                                        label="Quantity"
-                                        :rules="[(val) => (val && val > 0) || 'Must be positive']"
-                                        class="q-mb-md col"
+                                        :step="form.maximum_batch_size"
+                                        class="q-mb-md col-4"
                                     />
+
                                     <!-- ──────────────────────
                                     ├   Maximum Batch Size
                                     └─────────────────────── -->
@@ -70,7 +72,7 @@
                                         type="number"
                                         label="Maximum Batch Size"
                                         :rules="[(val) => (val && val > 0) || 'Must be positive']"
-                                        class="q-mb-md col-3"
+                                        class="q-mb-md col"
                                     />
                                 </div>
                                 <!-- -------------------------------- / -------------------------------- -->
@@ -78,69 +80,13 @@
                                     <!-- ──────────────────────
                                     ├   Printing Date
                                     └─────────────────────── -->
-                                    <q-input
-                                        v-model="form.printing_date"
-                                        filled
-                                        :readonly="readonly"
-                                        label="Printing Date"
-                                        mask="####/##/##"
-                                        :rules="[
-                                            (val) => {
-                                                if (!val) return true;
-                                                const date = new Date(val);
-                                                return (date instanceof Date && !isNaN(date)) || 'Invalid date';
-                                            },
-                                        ]"
-                                        class="q-mb-md col-5"
-                                    >
-                                        <template v-slot:append>
-                                            <q-icon name="event" class="cursor-pointer">
-                                                <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                                                    <q-date
-                                                        v-model="form.printing_date"
-                                                        mask="YYYY/MM/DD"
-                                                        title="تاریخ چاپ"
-                                                        subtitle="printing date"
-                                                        calendar="persian"
-                                                    >
-                                                        <div class="row items-center justify-end">
-                                                            <q-btn v-close-popup label="Close" color="primary" flat />
-                                                        </div>
-                                                    </q-date>
-                                                </q-popup-proxy>
-                                            </q-icon>
-                                        </template>
-                                    </q-input>
+                                    <date-field v-model="form.printing_date" :readonly="readonly" label="Printing Date" class="q-mb-md col-4" />
+
                                     <!-- ──────────────────────
                                     ├   Cutting Date
                                     └─────────────────────── -->
-                                    <q-input
-                                        v-model="form.cutting_date"
-                                        filled
-                                        :readonly="readonly"
-                                        label="Cutting Date"
-                                        mask="####/##/##"
-                                        :rules="[(val) => !!val || 'Field is required', 'date']"
-                                        class="q-mb-md col"
-                                    >
-                                        <template v-slot:append>
-                                            <q-icon name="event" class="cursor-pointer">
-                                                <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                                                    <q-date
-                                                        v-model="form.cutting_date"
-                                                        mask="YYYY/MM/DD"
-                                                        title="تاریخ برش"
-                                                        subtitle="cutting date"
-                                                        calendar="persian"
-                                                    >
-                                                        <div class="row items-center justify-end">
-                                                            <q-btn v-close-popup label="Close" color="primary" flat />
-                                                        </div>
-                                                    </q-date>
-                                                </q-popup-proxy>
-                                            </q-icon>
-                                        </template>
-                                    </q-input>
+                                    <date-field v-model="form.cutting_date" :readonly="readonly" label="Cutting Date" class="q-mb-md col-4">
+                                    </date-field>
                                     <!-- ──────────────────────
                                     ├   Status
                                     └─────────────────────── -->
@@ -155,7 +101,7 @@
                                         emit-value
                                         map-options
                                         :rules="[(val) => (val !== null && val !== undefined) || 'Field is required']"
-                                        class="q-mb-md col-3"
+                                        class="q-mb-md col"
                                     />
                                 </div>
                                 <!-- ──────────────────────
@@ -171,13 +117,47 @@
                                     :rows="2"
                                 />
                                 <!-- ──────────────────────
+                                ├   batches 
+                                └─────────────────────── -->
+                                <div class="area-container q-mt-xl">
+                                    <p class="area-label" v-if="routeMethod != 'create'">Batches : {{ form.batches.length }}</p>
+                                    <p class="area-label" v-if="routeMethod == 'create'">Batches : {{ creatingBatches.totalsCount }}</p>
+                                    <div v-if="form.batches[0]?.id || routeMethod == 'create'" class="within-area-container">
+                                        <!-- ⏺ show & edit -->
+                                        <q-table
+                                            v-if="routeMethod != 'create'"
+                                            :columns="batchColumns"
+                                            :rows="page.props.record?.batches"
+                                            row-key="id"
+                                            dense
+                                            class="q-mx-lg"
+                                        />
+                                        <!-- ⏺ create -->
+                                        <q-table
+                                            v-if="routeMethod == 'create'"
+                                            :columns="createBatchColumns"
+                                            :rows="createBatchRows"
+                                            row-key="index"
+                                            dense
+                                            class="q-mx-lg"
+                                        />
+                                    </div>
+                                    <div v-else>
+                                        <p>No batches is Exist for this cut order</p>
+                                    </div>
+                                </div>
+                                <!-- -------------------------------- btn: add new part -------------------------------- -->
+                                <q-btn v-if="!readonly" @click="" size="sm" label="Add New Batch" color="brown-5" icon="add" class="q-mt-xs">
+                                    <q-tooltip class="bg-accent">اضافه کردن یک ناحیه جدید برای پارت بندی سفارش</q-tooltip>
+                                </q-btn>
+                                <!-- ──────────────────────
                                 ├   Submit 
                                 └─────────────────────── -->
-                                <div class="q-mt-md">
-                                    <q-card-actions v-if="!readonly" align="right">
+                                <div class="q-mt-md row justify-end">
+                                    <q-card-actions v-if="!readonly">
                                         <q-btn label="Submit" type="submit" icon="send" color="primary" />
                                     </q-card-actions>
-                                    <q-card-actions v-if="['show'].includes(routeMethod)" align="right">
+                                    <q-card-actions>
                                         <q-btn label="Back" @click="router.visit(route('dashboard.cuts.index'))" icon="arrow_back" color="brown" />
                                     </q-card-actions>
                                 </div>
@@ -190,13 +170,13 @@
                                         v-if="routeMethod != 'create'"
                                         outline
                                         color="secondary"
-                                        :label="`created by : ${page.props.cut.created_by.full_name}  ${page.props.cut.created_at}`"
+                                        :label="`created by : ${page.props.record?.created_by?.full_name}  ${page.props.record?.created_at}`"
                                     />
                                     <q-badge
-                                        v-if="routeMethod != 'create' && page.props.cut.updated_at"
+                                        v-if="routeMethod != 'create' && page.props.record.updated_at"
                                         outline
                                         color="secondary"
-                                        :label="`updated at : ${page.props.cut.updated_at}`"
+                                        :label="`updated at : ${page.props.record.updated_at}`"
                                     />
                                 </div>
                             </q-form>
@@ -219,7 +199,9 @@ import { route } from 'ziggy-js';
 //. Layouts
 import PanelLayout from '@/Layouts/PanelLayout.vue';
 //. Components
-import TitleInPanel from '@/components/TitleInPanel.vue';
+import DateField from '@/Components/DateField.vue';
+import QuantityField from '@/Components/QuantityField.vue';
+import TitleInPanel from '@/Components/TitleInPanel.vue';
 //. Composables
 import { useSafeRoute } from '@/Composables/useSafeRoute';
 import { useRouteInfo } from '@/composables/useRouteInfo';
@@ -232,6 +214,7 @@ const { safeRoute } = useSafeRoute();
 
 //. Temp
 import Clg from '@/components/Clg.vue';
+import columns from '../Users/columns';
 const vars = ref([]); //temp
 // // [/]
 
@@ -251,14 +234,50 @@ const statusOptions = [
 /*                                   useform                                  */
 /* -------------------------------------------------------------------------- */
 const form = useForm({
-    order_id: page.props.cut?.order_id ?? null,
-    quantity: page.props.cut?.quantity ?? null,
-    maximum_batch_size: page.props.cut?.maximum_batch_size ?? null,
-    printing_date: page.props.cut?.printing_date ?? null,
-    cutting_date: page.props.cut?.cutting_date ?? null,
-    status: page.props.cut?.status ?? true,
-    description: page.props.cut?.description ?? '',
+    order_id: page.props.record?.order_id ?? null,
+    quantity: page.props.record?.quantity ?? null,
+    maximum_batch_size: page.props.record?.maximum_batch_size ?? 300,
+    printing_date: page.props.record?.printing_date ?? null,
+    cutting_date: page.props.record?.cutting_date ?? null,
+    status: page.props.record?.status ?? true,
+    description: page.props.record?.description ?? '',
+    batches: page.props.record?.batches ?? [{ id: null, cut_id: null, size: null, description: null, status: true, tags: null }],
+    creatingBatches: [],
 });
+
+/* -------------------------------------------------------------------------- */
+/*                                   batches                                  */
+/* -------------------------------------------------------------------------- */
+
+const creatingBatches = computed(() => {
+    const fullBatchesCount = Math.floor(form.quantity / form.maximum_batch_size);
+    const finalBatchSize = form.quantity - fullBatchesCount * form.maximum_batch_size;
+    const totalBatchesCount = fullBatchesCount + (finalBatchSize > 0 ? 1 : 0);
+
+    return {
+        fullsCount: fullBatchesCount,
+        finalsSize: finalBatchSize,
+        totalsCount: totalBatchesCount,
+        indexes: Array.from({ length: totalBatchesCount }, (_, i) => i + 1),
+        sizes: [...Array.from({ length: fullBatchesCount }, (_, i) => form.maximum_batch_size), ...(finalBatchSize !== 0 ? [finalBatchSize] : [])],
+    };
+});
+
+const batchColumns = [
+    { name: 'id', label: 'id', field: 'id', align: 'center' },
+    { name: 'size', label: 'size', field: 'size', align: 'center' },
+    { name: 'description', label: 'description', field: 'description', align: 'center' },
+];
+const createBatchColumns = [
+    { name: 'index', label: 'index', field: 'index', align: 'center' },
+    { name: 'size', label: 'size', field: 'size', align: 'center' },
+];
+const createBatchRows = computed(() =>
+    creatingBatches.value.indexes.map((index, i) => ({
+        index,
+        size: creatingBatches.value.sizes[i],
+    })),
+);
 
 /* -------------------------------------------------------------------------- */
 /*                                   submit                                   */
@@ -266,6 +285,7 @@ const form = useForm({
 const submitForm = () => {
     switch (routeMethod) {
         case 'create':
+            form.creatingBatches = createBatchRows.value;
             form.post('/dashboard/cuts', {
                 onSuccess: () => {
                     console.log('Cut created successfully');
@@ -276,11 +296,11 @@ const submitForm = () => {
             });
             break;
         case 'edit':
-            if (!page.props.cut?.id) {
+            if (!page.props.record?.id) {
                 console.error('Cut ID is missing');
                 return;
             }
-            form.put(`/dashboard/cuts/${page.props.cut.id}`, {
+            form.put(`/dashboard/cuts/${page.props.record.id}`, {
                 preserveState: true,
                 preserveScroll: true,
                 onSuccess: () => {
@@ -302,5 +322,29 @@ const submitForm = () => {
     border: 1px solid Brown;
     border-radius: 25%;
     padding: 10px;
+}
+
+.area-container {
+    position: relative;
+    border: 1px solid darkgray;
+    border-start-start-radius: 40px;
+    border-end-end-radius: 40px;
+    padding-top: 20px; /* فضایی برای قرار گرفتن متن روی border */
+}
+.within-area-container {
+    border-radius: 40px;
+    padding-top: 20px;
+    padding-bottom: 40px;
+}
+
+.area-label {
+    position: absolute;
+    top: -10px;
+    left: 36px;
+    padding: 0 8px;
+    font-weight: bold;
+    background: var(--background);
+    // color: mix(black, white, lightness(var(--background)));
+    //   color: inver(var(--background));
 }
 </style>

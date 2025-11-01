@@ -62,93 +62,76 @@ class Product extends Model
         'deleted_at'                  => 'datetime:Y/m/d H:i',
     ];
 
-    // -----------------------------
-    // Relationships
-    // -----------------------------
+    //. -------------------------------------------------------------------------- */
+    //.                                Relationships                               */
+    //. -------------------------------------------------------------------------- */
 
-    /**
-     * Product belongs to a customer.
-     */
+    /* -------------------------------- customer -------------------------------- */
     public function customer()
     {
-        return $this->belongsTo(Customer::class, 'customer_id', 'id');
+        return $this->belongsTo(Customer::class);
     }
 
-    /**
-     * Blue wire applicator.
-     */
-    public function blueWireApplicator()
+    /* ------------------------------- terminals -------------------------------- */
+    public function blueTerminal()
     {
-        return $this->belongsTo(Applicator::class, 'blue_wire_applicator_id', 'id');
+        return $this->belongsTo(Terminal::class, 'blue_terminal_id', 'id');
     }
 
-    /**
-     * Brown wire applicator.
-     */
-    public function brownWireApplicator()
+    public function brownTerminal()
     {
-        return $this->belongsTo(Applicator::class, 'brown_wire_applicator_id', 'id');
+        return $this->belongsTo(Terminal::class, 'brown_terminal_id', 'id');
     }
 
-    /**
-     * Yellow wire applicator.
-     */
-    public function yellowWireApplicator()
+    public function yellowTerminal()
     {
-        return $this->belongsTo(Applicator::class, 'yellow_wire_applicator_id', 'id');
+        return $this->belongsTo(Terminal::class, 'yellow_terminal_id', 'id');
     }
 
-    /**
-     * Double wire applicator.
-     */
+    public function doubleTerminal()
+    {
+        return $this->belongsTo(Terminal::class, 'double_terminal_id', 'id');
+    }
+
+    /* ------------------------------- applicators ------------------------------ */
     public function doubleWireApplicator()
     {
         return $this->belongsTo(Applicator::class, 'double_wire_applicator_id', 'id');
     }
 
-    /**
-     * Mold associated with this product.
-     */
+    /* ---------------------------------- molds --------------------------------- */
     public function mold()
     {
         return $this->belongsTo(Mold::class, 'molds_id', 'id');
     }
 
-    /**
-     * Orders for this product.
-     */
+    /* --------------------------------- orders --------------------------------- */
     public function orders()
     {
         return $this->hasMany(Order::class, 'product_id', 'id');
     }
 
-    /**
-     * Cycle times defined for this product.
-     */
+    /* ------------------------------- cycleTimes ------------------------------- */
     public function cycleTimes()
     {
         return $this->hasMany(Cycletime::class, 'product_id', 'id');
     }
 
-    /**
-     * Deliveries related to this product.
-     */
+    /* ------------------------------- deliveries ------------------------------- */
     public function deliveries()
     {
         return $this->hasMany(Delivery::class, 'product_id', 'id');
     }
 
-    /**
-     * User who created this product.
-     */
+    /* -------------------------------- createdBy ------------------------------- */
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by', 'id');
     }
 
-    // -----------------------------
-    // Boot Method - Auto Set created_by
-    // -----------------------------
+    //. -------------------------------------------------------------------------- */
+    //.                      Boot Method - Auto Set created_by                     */
+    //. -------------------------------------------------------------------------- */
 
     /**
      * Boot the model and attach event listeners.

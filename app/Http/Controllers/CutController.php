@@ -2,22 +2,63 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
+// use Illuminate\Routing\Controller;
+
+use App\Http\Requests\BatchRequest;
 use App\Http\Requests\CutRequest;
 use App\Http\Resources\CutResource;
+use App\Models\Batch;
 use App\Models\Cut;
 use App\Models\Month;
 use App\Models\Order;
 use App\Traits\CookieHelper;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\Gate;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Inertia\Inertia;
 
-class CutController extends Controller
+class CutController extends Controller implements HasMiddleware
 {
     use CookieHelper;
-    protected $icon = 'content_cut';
-    protected $title = 'Cuts';
+    use \App\Traits\ControllerCommonMethods;
+
+    //. -------------------------------------------------------------------------- */
+    //.                                  variables                                 */
+    //. -------------------------------------------------------------------------- */
+
+    protected $modelClass = \App\Models\Cut::class;
+    // protected $requestClass = \App\Http\Requests\CutRequest::class;
+    protected $resourceClass = \App\Http\Resources\CutResource::class;
+
+    protected $basePath = [
+        'routes' => 'dashboard.cuts.',
+        'pages' => 'dashboard/Cuts/',
+    ];
+
+    protected $title = [
+        'icons' => ['content_cut'],
+        'texts' => ['Cuts'],
+    ];
+
+
+    //. -------------------------------------------------------------------------- */
+    //.                                 middleware                                 */
+    //. -------------------------------------------------------------------------- */
+    public static function middleware(): array
+    {
+        return [
+            'check-master-roles',
+        ];
+    }
+
+    //. -------------------------------------------------------------------------- */
+    //.                                  construct                                 */
+    //. -------------------------------------------------------------------------- */
+    // public function __construct()
+    // {
+
+    // }
+
 
     //. -------------------------------------------------------------------------- 
     //.                                    index                                   
@@ -25,9 +66,6 @@ class CutController extends Controller
     public function index(Request $request)
     {
         $response = [];
-        $showDD = $request->input('showDD');
-        if ($showDD) dd($request->input('criteria'));
-        $response[] = ['showDD' => $showDD];
 
         //. --------------------------------- initial -------------------------------- 
         $criteria = [
@@ -75,7 +113,7 @@ class CutController extends Controller
         //. ---------------------------------- query --------------------------------- 
         $related = ['order', 'batches', 'createdBy'];
         $query = Cut::with($related)->orderBy('id', 'asc');
-        
+
         /* --------------------------- query search texts -------------------------- */
         $input = $request->input('criteria.keywords.description');
         if (!empty($input)) {
@@ -93,33 +131,14 @@ class CutController extends Controller
             $query->whereIn('status', $input);
         }
 
-
-        //. ------------------------------- pagination ------------------------------- 
-        // [Pagination]
-        $paginationCookie = $this->getPaginationCookie($request);
-        $response['paginationCookie'] = $paginationCookie;
-
-        $rawPerPage = $paginationCookie['perPage'] ?: $request->input('perPage', 5);
-        $perPage = is_numeric($rawPerPage) ? (int) $rawPerPage : 5;
-        if ($perPage === 0) {
-            $perPage = $query->count() ?: 1;
-        }
-
-        $response['getQuery'] = $query->get()->toArray(); 
-        $cuts = $query->paginate($perPage);
-        $resourcedData = CutResource::collection($cuts); // [/]
-
         //. --------------------------------- return --------------------------------- */
 
         $response = array_merge($response, [
             'columns' => CutResource::setColumns(),
-            'records' => $resourcedData,
+            'records' => $this->paginator($request, $query),
             'criteria' => $criteria,
-            'icon' => $this -> icon,
-            'title' => $this -> title,
+            'title' => $this->title,
         ]);
-        // mydump($response);
-
 
         return Inertia::render('dashboard/Index', $response);
     }
@@ -130,14 +149,28 @@ class CutController extends Controller
     //. -------------------------------------------------------------------------- */
     protected function form()
     {
-        // Gate::authorize('form', Cut::class);
-
         $orders = Order::select('id', 'product_id')->get();
         return [
             'orders' => $orders,
-            'icon' => $this -> icon,
-            'title' => $this -> title,
+            'title' => $this->title,
         ];
+    }
+
+
+    //. -------------------------------------------------------------------------- */
+    //.                                    show                                    */
+    //. -------------------------------------------------------------------------- */
+    public function show(Cut $cut)
+    {
+        $responses = $this->form();
+
+        $cut->load(['createdBy', 'batches']);
+
+        $responses = array_merge($responses, [
+            'record' => $cut,
+        ]);
+
+        return Inertia::render('dashboard/Cuts/Form', $responses);
     }
 
 
@@ -152,33 +185,31 @@ class CutController extends Controller
         return Inertia::render('dashboard/Cuts/Form', $responses);
     }
 
-    
+
     //. -------------------------------------------------------------------------- */
     //.                                    store                                   */
     //. -------------------------------------------------------------------------- */
     public function store(CutRequest $request)
     {
-        $cutData = $request->validated();
+        $data = $request->validated();
+        $request->validate(BatchRequest::batchesRules());
 
-        Cut::create($cutData);
+        $cut = Cut::create($data);
+
+        $batches = $request->input('creatingBatches', []);
+        if (!empty($batches)) {
+            foreach ($batches as $batch) {
+                Batch::create([
+                    'cut_id' => $cut->id, // Link batch to the created Cut
+                    'size' => $batch['size'] ?? null,
+                    'created_by' => auth()->id(),
+                ]);
+            }
+        }
 
         return redirect()->route('dashboard.cuts.index')->with('message', 'Cut created successfully.');
     }
 
-    //. -------------------------------------------------------------------------- */
-    //.                                    show                                    */
-    //. -------------------------------------------------------------------------- */
-    public function show(Cut $cut)
-    {
-        $responses = $this->form();
-
-        $cut->load(['createdBy']);
-        $responses = array_merge($responses, [
-            'cut' => $cut,
-        ]);
-
-        return Inertia::render('dashboard/Cuts/Form', $responses);
-    }
 
     //. -------------------------------------------------------------------------- */
     //.                                    edit                                    */
@@ -187,9 +218,9 @@ class CutController extends Controller
     {
         $responses = $this->form();
 
-        $cut->load(['order', 'createdBy']);
+        $cut->load(['order', 'createdBy', 'batches']);
         $responses = array_merge($responses, [
-            'cut' => $cut,
+            'record' => $cut,
         ]);
         return Inertia::render('dashboard/Cuts/Form', $responses);
     }
@@ -199,60 +230,10 @@ class CutController extends Controller
     //. -------------------------------------------------------------------------- */
     public function update(CutRequest $request, Cut $cut)
     {
-        
+        $data = $request->validated();
 
-        $cutData = $request->validated();
-
-        $cut->update($cutData);
+        $cut->update($data);
 
         return redirect()->route('dashboard.cuts.index')->with('message', 'Cut updated successfully.');
-    }
-
-    //. -------------------------------------------------------------------------- */
-    //.                                   destroy                                  */
-    //. -------------------------------------------------------------------------- */
-    public function destroy(Cut $cut)
-    {
-        $cut->delete();
-
-        return redirect()->route('dashboard.cuts.index')
-            ->with('success', 'Cut deleted successfully.');
-    }
-
-
-    //. -------------------------------------------------------------------------- */
-    //.                                 bulkDestroy                                */
-    //. -------------------------------------------------------------------------- */
-    public function bulkDestroy(Request $request)
-    {
-        $parts = explode('.', $request->route()->getName());
-        array_pop($parts);
-        $thisIndexRoute = implode('.', $parts) . '.index';
-        $thisIndexUri = ucfirst(explode('.', $request->route()->getName())[0]) . '/Index';
-        $ids = $request->input('ids', []);
-        if (empty($ids)) {
-            return Inertia::render($thisIndexUri, [
-                'error' => 'please select one or more rows',
-                'page' => $request->page,
-                'perPage' => $request->perPage,
-            ]);
-        }
-
-        $noDeletable = [];
-        if (array_intersect($noDeletable, $ids)) {
-            abort(
-                403,
-                "You can not delete records: "
-                    .
-                    implode(', ', array_intersect($noDeletable, $ids))
-            );
-        }
-
-        Cut::whereIn('id', $ids)->delete();
-
-        return redirect()->route($thisIndexRoute, [
-            'page' => $request->page,
-            'perPage' => $request->perPage,
-        ])->with('success', 'Selected cuts deleted successfully.');
     }
 }

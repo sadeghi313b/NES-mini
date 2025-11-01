@@ -21,8 +21,8 @@ class CutRequest extends FormRequest
     {
         $rules = [
             'order_id' => 'required|exists:orders,id',
-            'quantity' => 'required|integer|min:1000|max:3000',
-            'maximum_batch_size' => 'required|integer|in:300,500',
+            'quantity' => 'required|integer|min:0|max:10000',
+            'maximum_batch_size' => 'nullable|integer|in:300,500',
             'printing_date' => 'nullable|date',
             'cutting_date' => 'nullable|date',
             'description' => 'nullable|string',

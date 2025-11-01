@@ -11,7 +11,27 @@ class ActivityRequest extends FormRequest
      */
     public function authorize(): bool
     {
+        // You can add policy-based control later if needed
         return true;
+    }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        // Convert JSON string to array if necessary
+        if (is_string($this->input('interchangeable-bundle'))) {
+            $decoded = json_decode($this->input('interchangeable-bundle'), true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $this->merge(['interchangeable-bundle' => $decoded]);
+            }
+        }
+
+        // Cast status to boolean
+        if ($this->has('status')) {
+            $this->merge(['status' => (bool) $this->input('status')]);
+        }
     }
 
     /**
@@ -19,20 +39,29 @@ class ActivityRequest extends FormRequest
      */
     public function rules(): array
     {
-        $rules = [
-            'name' => 'required|string|max:255',
-            'interchangable_category' => 'nullable|string|max:255',
-            'description' => 'nullable|string',
-            'status' => 'boolean',
+        return [
+            'name'                       => ['required', 'string', 'max:32'],
+            'alias'                      => ['nullable', 'string', 'max:32'],
+            'zone'                       => ['nullable', 'string', 'max:32'],
+            'common_standard_tv_time'    => ['nullable', 'integer', 'min:0', 'max:65535'],
+            'common_standard_ref_time'   => ['nullable', 'integer', 'min:0', 'max:65535'],
+            'interchangeable-bundle'     => ['nullable', 'array'],
+            'description'                => ['nullable', 'string'],
+            'status'                     => ['boolean'],
+            'tags'                       => ['nullable', 'array'],
         ];
+    }
 
-        // For update requests, make fields optional
-        if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
-            $rules = array_map(function ($rule) {
-                return 'sometimes|' . $rule;
-            }, $rules);
-        }
-
-        return $rules;
+    /**
+     * Custom validation messages (optional)
+     */
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'The activity name is required.',
+            'name.max'      => 'The name may not be greater than 32 characters.',
+            'common_standard_tv_time.integer' => 'TV time must be an integer.',
+            'common_standard_ref_time.integer' => 'Ref time must be an integer.',
+        ];
     }
 }

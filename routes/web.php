@@ -1,11 +1,11 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
-
-
 
 
 
@@ -27,26 +27,14 @@ require __DIR__ . '/auth.php';
 /* -------------------------------------------------------------------------- */
 /*                                   tables                                   */
 /* -------------------------------------------------------------------------- */
-function getTableNamesFromMigrations()
+function getTableNames($connection = null)
 {
-    $migrations = DB::table('migrations')->pluck('migration')->toArray();
-
-    $excludedTables = ['jobs', 'job_batches', 'failed_jobs'];
-
-    $tableNames = [];
-    foreach ($migrations as $migration) {
-        if (preg_match('/create_(\w+)_table/', $migration, $matches)) {
-            $tableName = $matches[1];
-            if (!in_array($tableName, $excludedTables)) {
-                $tableNames[] = $tableName;
-            }
-        }
-    }
-
-    return $tableNames;
+    $connection = $connection ?: DB::connection();
+    $tables = $connection->getSchemaBuilder()->getTables();
+    return array_column($tables, 'name');
 }
 
-$tables = getTableNamesFromMigrations();
+$tables = getTableNames();
 
 
 
@@ -54,6 +42,11 @@ $tables = getTableNamesFromMigrations();
 /* -------------------------------------------------------------------------- */
 /*                                static routs                                */
 /* -------------------------------------------------------------------------- */
+Route::middleware(['auth'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->name('dashboard.index');
+        // ->name('dashboard');
+});
 
 //temp Route::delete('dashboard/orders/bulk-destroy', [OrderController::class, 'bulkDestroy'])->name('dashboard.orders.bulkDestroy');
 foreach ($tables as $table) {
@@ -74,7 +67,9 @@ Route::post('users/{user}/deactivate', [UserController::class, 'deactivate'])->n
 /* -------------------------------------------------------------------------- */
 /*                                 controllers                                */
 /* -------------------------------------------------------------------------- */
-use Illuminate\Support\Str;
+
+
+
 
 $controllerFiles = scandir(app_path('Http/Controllers'));
 $controllers = [];

@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Morilog\Jalali\CalendarUtils;
+use Morilog\Jalali\Jalalian;
 
 class Order extends Model
 {
@@ -24,7 +26,14 @@ class Order extends Model
         'deleted_at' => 'datetime:Y/m/d H:i',
     ];
 
-    /* -------------------------------- Accessors ------------------------------- */
+    // protected $jalaliDates = [
+    //     'notification_date',
+    //     'created_at', 'updated_at', 'deleted_at',
+    // ];
+
+    //. -------------------------------------------------------------------------- */
+    //.                                  accessor                                  */
+    //. -------------------------------------------------------------------------- */
     protected function seenLabel(): Attribute //seenInfo
     {
         return Attribute::make(
@@ -33,30 +42,29 @@ class Order extends Model
         );
     }
 
-    /* ------------------------ filterables & searchables ----------------------- */
-    // فیلدهایی که قابلیت جستجو دارند
-    // $order->searchable
-    protected $searchable = [
-        'product',
-        'description',
-    ];
+    /* ----------------------------- date accessors ----------------------------- */
+    public function getNotificationDateAttribute($value)
+    {
+        return $value
+            ? Jalalian::fromDateTime($value)->format('Y/m/d')
+            : null;
+    }
+    public function setNotificationDateAttribute($value)
+    {
+        if ($value) {
+            [$jYear, $jMonth, $jDay] = explode('/', $value);
+            [$gYear, $gMonth, $gDay] = CalendarUtils::toGregorian($jYear, $jMonth, $jDay);
+            $this->attributes['notification_date'] = sprintf('%04d-%02d-%02d', $gYear, $gMonth, $gDay);
+        } else {
+            $this->attributes['notification_date'] = null;
+        }
+    }
 
-    // فیلدهایی که قابل فیلتر هستند
-    // 
-    protected $filterable = [
-        'product',
-        'month',
-        'status',
-        'seen',
-    ];
 
-    // روابطی که می‌توان روی آن‌ها جستجو کرد
-    // $order->searchableRelations
-    protected $searchableRelations = [
-        'product' => 'product_id',
-    ];
 
-    /* ------------------------------ Relationships ----------------------------- */
+    //. -------------------------------------------------------------------------- */
+    //.                                Relationships                               */
+    //. -------------------------------------------------------------------------- */
     public function product()
     {
         return $this->belongsTo(Product::class);
@@ -87,6 +95,15 @@ class Order extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    //# productions
+    public function productions()
+    {
+        return $this->belongsToMany(Production::class, 'order_production');
+    }
+
+    //. -------------------------------------------------------------------------- */
+    //.                                    boot                                    */
+    //. -------------------------------------------------------------------------- */
     protected static function boot()
     {
         parent::boot();

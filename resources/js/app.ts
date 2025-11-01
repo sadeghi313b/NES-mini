@@ -14,7 +14,6 @@ import { Ziggy } from './ziggy';
 //Quasar
 import '@quasar/extras/material-icons/material-icons.css';
 import { Dialog, Notify, Quasar } from 'quasar';
-import langFa from 'quasar/lang/fa';
 import 'quasar/src/css/index.sass';
 
 const appName = import.meta.env.VITE_APP_NAME || 'NES';
@@ -25,16 +24,11 @@ createInertiaApp({
     setup({ el, App, props, plugin }) {
         createApp({ render: () => h(App, props) })
             .use(plugin)
-            //start quasar
             .use(Quasar, {
                 plugins: { Dialog, Notify },
-                // lang: langFa,
-                config: {
-                },
+                config: {},
             })
-            // end quasar
-            .use(ZiggyVue, Ziggy) //ziggy
-            // .use(ZiggyVue) //زیگی ویو خودش فایل زیگی رو پیدا میکنه
+            .use(ZiggyVue, Ziggy)
             .mount(el);
     },
     progress: {

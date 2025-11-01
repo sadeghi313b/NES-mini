@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Morilog\Jalali\CalendarUtils;
+use Morilog\Jalali\Jalalian;
 
 class Cut extends Model
 {
@@ -22,6 +24,35 @@ class Cut extends Model
         'updated_at' => 'datetime:Y/m/d H:i',
         'deleted_at' => 'datetime:Y/m/d H:i',
     ];
+
+    /* -------------------------------------------------------------------------- */
+    /*                                  accessors                                 */
+    /* -------------------------------------------------------------------------- */
+    public function getPrintingDateAttribute($value)
+    {
+        return $value
+            ? Jalalian::fromDateTime($value)->format('Y/m/d')
+            : null;
+    }
+    public function setprintingDateAttribute($value)
+    {
+        $this->attributes['printing_date'] = $value
+            ? CalendarUtils::createCarbonFromFormat('Y/m/d', $value)->toDateString()  
+            : null;  
+    }
+
+    public function getCuttingDateAttribute($value)
+    {
+        return $value
+            ? Jalalian::fromDateTime($value)->format('Y/m/d')
+            : null;
+    }
+    public function setCuttingDateAttribute($value)
+    {
+        $this->attributes['cutting_date'] = $value
+            ? CalendarUtils::createCarbonFromFormat('Y/m/d', $value)->toDateString()  
+            : null;  
+    }
 
     /* -------------------------------------------------------------------------- */
     /*                                Relationships                               */

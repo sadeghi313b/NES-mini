@@ -1,37 +1,65 @@
-<script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue';
-import { dashboard } from '@/routes';
-import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/vue3';
-import PlaceholderPattern from '../components/PlaceholderPattern.vue';
+<template>
+  <!-- Use PanelLayout instead of AppLayout -->
+  <panel-layout>
+    <template #header>
+      <div class="text-h6">Dashboard</div>
+    </template>
 
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard().url,
-    },
+    <q-page class="q-pa-md">
+      <q-table
+        :rows="safeRows"
+        :columns="columns"
+        row-key="order_id"
+        dense
+        flat
+        separator="cell"
+      >
+        <template v-slot:body-cell="props">
+          <q-td :props="props">{{ props.value }}</q-td>
+        </template>
+      </q-table>
+    </q-page>
+  </panel-layout>
+</template>
+
+<script setup lang="ts">
+// ---------------------------------------------------------------------------
+// Imports
+// ---------------------------------------------------------------------------
+import PanelLayout from '@/layouts/PanelLayout.vue';
+import { usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
+
+// ---------------------------------------------------------------------------
+// Props from Laravel backend (Inertia)
+// ---------------------------------------------------------------------------
+const page = usePage();
+const aggregatedOrders = computed(() => page.props.aggregatedOrders || []);
+
+//! Defensive check: make sure aggregatedOrders is a non-null array
+const safeRows = computed(() => {
+  const rows = page.props.aggregatedOrders;
+  if (!Array.isArray(rows)) return [];
+  return rows.filter((r) => r && typeof r === 'object');
+});
+
+const loading = ref(false);
+
+// ---------------------------------------------------------------------------
+// Columns definition for QTable
+// ---------------------------------------------------------------------------
+const columns = [
+  { name: 'month_name', label: 'Month', field: 'month_name', align: 'center' },
+  { name: 'order_id', label: 'Order ID', field: 'order_id', align: 'center' },
+  { name: 'product_id', label: 'Product', field: 'product_id', align: 'center' },
+  { name: 'order_quantity', label: 'Order', field: 'order_quantity', align: 'center' },
+  { name: 'total_cuts', label: 'Cuts', field: 'total_cuts', align: 'center' },
+  { name: 'total_productions', label: 'Produced', field: 'total_productions', align: 'center' },
 ];
 </script>
 
-<template>
-    <Head title="Dashboard" />
-
-    <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-            <div class="grid auto-rows-min gap-4 md:grid-cols-3">
-                <div class="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                    <PlaceholderPattern />
-                </div>
-                <div class="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                    <PlaceholderPattern />
-                </div>
-                <div class="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                    <PlaceholderPattern />
-                </div>
-            </div>
-            <div class="relative min-h-[100vh] flex-1 rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-                <PlaceholderPattern />
-            </div>
-        </div>
-    </AppLayout>
-</template>
+<style scoped>
+.q-page {
+  /* background-color: white; */
+}
+</style>

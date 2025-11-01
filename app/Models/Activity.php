@@ -14,12 +14,16 @@ class Activity extends Model
 
     protected $casts = [
         'status' => 'boolean',
+        'tags' => 'array',
+        'interchangeable-bundle' => 'array',
         'created_at' => 'datetime:Y/m/d H:i',
         'updated_at' => 'datetime:Y/m/d H:i',
         'deleted_at' => 'datetime:Y/m/d H:i',
     ];
 
-    // Relationships
+    //. -------------------------------------------------------------------------- */
+    //.                                Relationships                               */
+    //. -------------------------------------------------------------------------- */
     public function cycleTimes()
     {
         return $this->hasMany(Cycletime::class);

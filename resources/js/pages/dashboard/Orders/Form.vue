@@ -15,14 +15,13 @@
                         <!-- ──────────────────────
                         ├   title
                         └─────────────────────── -->
-
+                        <TitleInPanel />
                     </div>
                 </q-card-section>
             </q-card>
             <clg
                 where=""
                 :vars="{
-                    'page.props.theRoute': page.props.theRoute.parts,
                 }"
             />
         </template>
@@ -37,46 +36,20 @@
                     <q-card>
                         <q-card-section>
                             <q-form @submit.prevent="submitForm">
-                                <!-- -------------------------------- / -------------------------------- -->
-                                <div class="row q-gutter-md">
-                                    <!-- ──────────────────────
+                                <!-- ──────────────────────
                                     ├   Notification Date
                                     └─────────────────────── -->
-                                    <q-input
-                                        v-model="form.notification_date"
-                                        filled
-                                        :readonly="readonly"
-                                        label="Notification Date"
-                                        mask="####/##/##"
-                                        :rules="['date']"
-                                        class="q-mb-md col-5"
-                                    >
-                                        <template v-slot:append>
-                                            <q-icon name="event" class="cursor-pointer">
-                                                <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                                                    <!-- -------------------------------- QDate -------------------------------- -->
-                                                    <q-date
-                                                        v-model="form.notification_date"
-                                                        mask="YYYY/MM/DD"
-                                                        title="تاریخ ثبت سفارش"
-                                                        subtitle="email date"
-                                                        calendar="persian"
-                                                    >
-                                                        <div class="row items-center justify-end">
-                                                            <q-btn v-close-popup label="Close" color="primary" flat />
-                                                        </div>
-                                                    </q-date>
-                                                </q-popup-proxy>
-                                            </q-icon>
-                                        </template>
-                                    </q-input>
-                                    <!-- ──────────────────────
+                                <div class="row q-gutter-md">
+                                    <date-field v-model="form.notification_date" :readonly="readonly" label="Notification Date" class="q-mb-md col-5">
+                                    </date-field>
+                                </div>
+                                <!-- ──────────────────────
                                     ├   Month showAddButton
                                     └─────────────────────── -->
+                                <div class="row q-gutter-md">
                                     <q-select
                                         v-model="form.month_id"
-                                        rounded outlined
-                                        
+                                        outlined
                                         clearable
                                         use-input
                                         :readonly="readonly"
@@ -88,7 +61,7 @@
                                         map-options
                                         @filter="filterFn"
                                         :rules="[(val) => !!val || 'Field is required']"
-                                        class="q-mb-md col"
+                                        class="q-mb-md col-6"
                                     >
                                         <template v-slot:after>
                                             <div style="min-width: 60px; display: flex; align-items: center">
@@ -113,32 +86,28 @@
                                     ├   Product
                                     └─────────────────────── -->
                                     <q-select
+                                        :rules="[(val) => !!val || 'Field is required']"
+                                        class="q-mb-md col-5"
                                         v-model="form.product_id"
                                         filled
                                         clearable
                                         use-input
+                                        input-debounce="0"
+                                        @filter="qselectFilter"
                                         :readonly="readonly"
                                         label="Product"
-                                        :options="page.props.products"
-                                        option-value="id"
-                                        option-label="name"
+                                        :options="productOptions"
+                                        option-value="value"
+                                        option-label="label"
                                         emit-value
                                         map-options
-                                        :rules="[(val) => !!val || 'Field is required']"
-                                        class="q-mb-md col-5"
+                                        @blur="fillFirstOption"
                                     />
                                     <!----------------------
                                     ├   Quantity 
                                     └─────────────────────── -->
-                                    <q-input
-                                        v-model.number="form.quantity"
-                                        filled
-                                        :readonly="readonly"
-                                        type="number"
-                                        label="Quantity"
-                                        :rules="[(val) => (val && val >= 2000 && val <= 80000) || 'Between 2000 and 80000']"
-                                        class="q-mb-md col"
-                                    />
+                                    <QuantityField v-model:quantity="form.quantity" :readonly="readonly" :step="500" />
+
                                     <!-- ──────────────────────
                                     ├   Status 
                                     └─────────────────────── -->
@@ -156,6 +125,7 @@
                                         map-options
                                     />
                                 </div>
+                                
                                 <!-- ──────────────────────
                                 ├   Description 
                                 └─────────────────────── -->
@@ -169,62 +139,60 @@
                                     :rows="2"
                                 />
                                 <!-- ──────────────────────
-                                ├   Deadlines 2
+                                ├   Deadlines 
                                 └─────────────────────── -->
-                                <div class="deadline-container q-mt-xl">
-                                    <div class="deadline-label">Deadlines</div>
+                                <div class="area-container q-mt-xl">
+                                    <p class="area-label">Deadlines</p>
                                     <q-list separator class="q-mx-md q-pb-md q-gutter-y-md">
-                                        <q-item v-for="(deadline, index) in form.deadlines" :key="index">
-                                            <q-item-section>
-                                                <div class="row q-gutter-md">
-                                                    <!-- -------------------------------- quantity -------------------------------- -->
+                                        <div v-if="form.deadlines[0]?.promised_date || routeMethod == 'create'">
+                                            <q-item v-for="(deadline, index) in form.deadlines" :key="index">
+                                                <q-item-section>
+                                                    <div class="row q-gutter-md">
+                                                        <!-- -------------------------------- quantity -------------------------------- -->
+                                                        <q-input
+                                                            v-model.number="deadline.promised_quantity"
+                                                            filled
+                                                            :readonly="readonly"
+                                                            type="number"
+                                                            label="Promised Part Quantity"
+                                                            class="col"
+                                                            :rules="[(val) => !val || val > 0 || 'Must be positive']"
+                                                        />
+                                                        <!-- -------------------------------- due date -------------------------------- -->
+                                                        <date-field
+                                                            v-model="deadline.promised_date"
+                                                            :readonly="readonly"
+                                                            label="Promised Date"
+                                                            class="col-6"
+                                                        >
+                                                        </date-field>
+                                                    </div>
+                                                    <!-- -------------------------------- description -------------------------------- -->
                                                     <q-input
-                                                        v-model.number="deadline.part_quantity"
+                                                        v-model="deadline.description"
                                                         filled
                                                         :readonly="readonly"
-                                                        type="number"
-                                                        label="Part Quantity"
-                                                        class="col"
-                                                        :rules="[(val) => !val || val > 0 || 'Must be positive']"
+                                                        label="Description"
+                                                        class=""
                                                     />
-                                                    <!-- -------------------------------- due date -------------------------------- -->
-                                                    <q-input
-                                                        v-model="deadline.due_date"
-                                                        filled
-                                                        :readonly="readonly"
-                                                        label="Due Date"
-                                                        mask="####/##/##"
-                                                        class="col-6"
-                                                    >
-                                                        <template v-slot:append>
-                                                            <q-icon name="event" class="cursor-pointer">
-                                                                <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                                                                    <q-date v-model="deadline.due_date" mask="YYYY/MM/DD">
-                                                                        <div class="row items-center justify-end">
-                                                                            <q-btn v-close-popup label="Close" color="primary" flat />
-                                                                        </div>
-                                                                    </q-date>
-                                                                </q-popup-proxy>
-                                                            </q-icon>
-                                                        </template>
-                                                    </q-input>
-                                                </div>
-                                                <!-- -------------------------------- description -------------------------------- -->
-                                                <q-input v-model="deadline.description" filled :readonly="readonly" label="Description" class="" />
-                                            </q-item-section>
-                                            <!-- -------------------------------- btn: Trash -------------------------------- -->
-                                            <q-item-section v-if="!readonly" side top>
-                                                <q-btn
-                                                    flat
-                                                    round
-                                                    size="lg"
-                                                    color="brown-5"
-                                                    text-color="negative"
-                                                    icon="delete"
-                                                    @click="removeDeadline(index)"
-                                                />
-                                            </q-item-section>
-                                        </q-item>
+                                                </q-item-section>
+                                                <!-- -------------------------------- btn: Trash -------------------------------- -->
+                                                <q-item-section v-if="!readonly" side top>
+                                                    <q-btn
+                                                        flat
+                                                        round
+                                                        size="lg"
+                                                        color="brown-5"
+                                                        text-color="negative"
+                                                        icon="delete"
+                                                        @click="removeDeadline(index)"
+                                                    />
+                                                </q-item-section>
+                                            </q-item>
+                                        </div>
+                                        <div v-else>
+                                            <p>No dead-time has assigned</p>
+                                        </div>
                                     </q-list>
                                 </div>
                                 <!-- -------------------------------- btn: add new part -------------------------------- -->
@@ -242,12 +210,12 @@
                                 <!-- ──────────────────────
                                 ├   Submit 
                                 └─────────────────────── -->
-                                <div class="q-mt-md">
-                                    <q-card-actions v-if="!readonly" align="right">
-                                        <q-btn label="Submit" type="submit" icon="send" color="primary" />
-                                    </q-card-actions>
-                                    <q-card-actions v-if="['show'].includes(routeMethod)" align="right">
+                                <div class="q-mt-md row justify-end">
+                                    <q-card-actions>
                                         <q-btn label="Back" @click="router.visit(route('dashboard.orders.index'))" icon="arrow_back" color="brown" />
+                                    </q-card-actions>
+                                    <q-card-actions v-if="!readonly">
+                                        <q-btn label="Submit" type="submit" icon="send" color="primary" />
                                     </q-card-actions>
                                 </div>
 
@@ -259,13 +227,13 @@
                                         v-if="routeMethod != 'create'"
                                         outline
                                         color="secondary"
-                                        :label="`created by : ${page.props.order.created_by.full_name}  ${page.props.order.created_at}`"
+                                        :label="`created by : ${page.props.record?.created_by?.full_name}  ${page.props.record?.created_at}`"
                                     />
                                     <q-badge
-                                        v-if="routeMethod != 'create' && page.props.order.updated_at"
+                                        v-if="routeMethod != 'create' && page.props.record?.updated_at"
                                         outline
                                         color="secondary"
-                                        :label="`updated at : ${page.props.order.updated_at}`"
+                                        :label="`updated at : ${page.props.record.updated_at}`"
                                     />
                                 </div>
                             </q-form>
@@ -278,7 +246,9 @@
 </template>
 
 <script setup>
-// [Imports] todo:delete some imports
+/* -------------------------------------------------------------------------- */
+/*                                   Imports                                  */
+/* -------------------------------------------------------------------------- */
 import { router, useForm, usePage } from '@inertiajs/vue3';
 import { useQuasar } from 'quasar';
 import { computed, ref } from 'vue';
@@ -286,6 +256,9 @@ import { route } from 'ziggy-js';
 //. Layouts
 import PanelLayout from '@/Layouts/PanelLayout.vue';
 //. Components
+import TitleInPanel from '@/Components/TitleInPanel.vue';
+import DateField from '@/Components/DateField.vue';
+import QuantityField from '@/Components/QuantityField.vue';
 //. Composables
 import { useSafeRoute } from '@/Composables/useSafeRoute';
 import { useRouteInfo } from '@/composables/useRouteInfo';
@@ -299,33 +272,65 @@ const { safeRoute } = useSafeRoute();
 //. Temp
 import Clg from '@/components/Clg.vue';
 const vars = ref([]); //temp
-// // [/]
 
-// [variables]
+
+/* -------------------------------------------------------------------------- */
+/*                                  variables                                 */
+/* -------------------------------------------------------------------------- */
 const readonly = computed(() => {
     return !['edit', 'create'].includes(routeMethod);
 });
-// // [/]
 
-/* --------------------------------- useform -------------------------------- */
+
+/* -------------------------------------------------------------------------- */
+/*                                   useform                                  */
+/* -------------------------------------------------------------------------- */
 const form = useForm({
-    product_id: page.props.order?.product_id ?? null,
-    month_id: page.props.order?.month_id ?? null,
-    quantity: page.props.order?.quantity ?? null,
-    notification_date: page.props.order?.notification_date ?? null,
-    seen: page.props.order?.seen ?? 'seen',
-    status: page.props.order?.status ?? 'active',
-    description: page.props.order?.description ?? '',
-    deadlines: page.props.order?.deadlines ?? [
+    product_id: page.props.record?.product_id ?? null,
+    month_id: page.props.record?.month_id ?? null,
+    quantity: page.props.record?.quantity ?? null,
+    notification_date: page.props.record?.notification_date ?? null,
+    seen: page.props.record?.seen ?? 'seen',
+    status: page.props.record?.status ?? 'active',
+    description: page.props.record?.description ?? '',
+    deadlines: page.props.record?.deadlines ?? [
         {
-            part_quantity: null,
-            due_date: null,
+            promised_quantity: null,
+            promised_date: null,
             description: '',
         },
     ],
 });
 
-/* ------------------------------- add months ------------------------------- */
+/* -------------------------------------------------------------------------- */
+/*                        Filter function for q-select                        */
+/* -------------------------------------------------------------------------- */
+const productOptions = ref([...page.props.products]);
+
+function qselectFilter(val, update) {
+    if (val === '') {
+        update(() => {
+            productOptions.value = [...page.props.products]; // reset to all options
+        });
+        return;
+    }
+
+    update(() => {
+        const needle = val.toLowerCase();
+        productOptions.value = page.props.products.filter((v) => v.label.toLowerCase().includes(needle));
+    });
+}
+
+function fillFirstOption() {
+    if (!form.product_id && productOptions.value.length > 0) {
+        // assign first option to v-model
+        form.product_id = productOptions.value[0].value;
+    }
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                 add months                                 */
+/* -------------------------------------------------------------------------- */
 const inputText = ref('');
 const showAddButton = ref(false);
 const months = ref(page.props.months);
@@ -365,7 +370,9 @@ const addNewMonth = () => {
     }
 };
 
-/* -------------------------------- deadlines ------------------------------- */
+/* -------------------------------------------------------------------------- */
+/*                                  deadlines                                 */
+/* -------------------------------------------------------------------------- */
 const addDeadline = () => {
     form.deadlines.push({
         part_quantity: null,
@@ -378,7 +385,9 @@ const removeDeadline = (index) => {
     form.deadlines.splice(index, 1);
 };
 
-/* --------------------------------- submit --------------------------------- */
+/* -------------------------------------------------------------------------- */
+/*                                   submit                                   */
+/* -------------------------------------------------------------------------- */
 const submitForm = () => {
     switch (routeMethod) {
         case 'create':
@@ -392,12 +401,12 @@ const submitForm = () => {
             });
             break;
         case 'edit':
-            if (!page.props.order?.id) {
+            if (!page.props.record?.id) {
                 console.error('Order ID is missing');
                 return;
             }
-            // form.put(route('dashboard.orders.update', page.props.order.id), {
-            form.put(`/dashboard/orders/${page.props.order.id}`, {
+            // form.put(route('dashboard.orders.update', page.props.record.id), {
+            form.put(`/dashboard/orders/${page.props.record.id}`, {
                 preserveState: true,
                 preserveScroll: true,
                 onSuccess: () => {
@@ -417,7 +426,7 @@ const submitForm = () => {
 </script>
 
 <style scoped lang="scss">
-.deadline-container {
+.area-container {
     position: relative;
     border: 1px solid darkgray;
     border-start-start-radius: 40px;
@@ -425,7 +434,7 @@ const submitForm = () => {
     padding-top: 20px; /* فضایی برای قرار گرفتن متن روی border */
 }
 
-.deadline-label {
+.area-label {
     position: absolute;
     top: -10px;
     left: 36px;
@@ -436,7 +445,7 @@ const submitForm = () => {
     //   color: inver(var(--background));
 }
 
-// body.body--dark .deadline-label {
+// body.body--dark .area-label {
 //     background: #262626;
 //     color: #bfbfbf;
 // }

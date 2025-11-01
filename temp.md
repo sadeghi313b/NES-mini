@@ -1,36 +1,78 @@
-$filterables = [];
-
-        $options = Month::query()
-            ->select('name')         // Select only the name column
-            ->distinct()             // Remove duplicate names
-            ->orderBy('name')        // Sort names alphabetically
-            ->pluck('name')          // Return a Collection of names
-            ->map(fn($name, $index) => [   // Transform each name with its index into a dropdown-friendly array
-                'label' => $name,          // Use name as label
-                'value' => $index + 1         // Use array index as value
-            ])
-            ->toArray();             // Convert to a plain PHP array
-        $filterables['month'] = ['multiple' => true, 'options' => $options];
-
-        $options = Cut::query()
-            ->select('maximum_batch_size')
-            ->distinct()
-            ->orderBy('maximum_batch_size')
-            ->pluck('maximum_batch_size')
-            ->map(fn($name, $index) => [
-                'label' => $name,
-                'value' => $index + 1
-            ])
-            ->toArray();
-        $filterables['maximum_batch_size'] = ['multiple' => true, 'options' => $options];
-
-        $options = ['Active', 'Inactive'];
-        $options = array_map(
-            fn($name, $index) => ['label' => $name, 'value' => $index + 1],
-            ['Active', 'Inactive'], //` each $name: fn-arg1
-            array_keys($options)  //` each $index: fn-arg2
-        );
-        $filterables['status'] = ['multiple' => false, 'options' => $options];
 <!-- ----------------------------------------------------------------------- -->
-<!--                                   ---                                   -->
+<!--                                   q-date                                -->
 <!-- ----------------------------------------------------------------------- -->
+<q-input
+                                        v-model="form.notification_date"
+                                        filled
+                                        :readonly="readonly"
+                                        label="Notification Date"
+                                        mask="####/##/##"
+                                        :rules="['date']"
+                                        class="q-mb-md col-5"
+                                    >
+                                        <template v-slot:append>
+                                            <q-icon name="event" class="cursor-pointer">
+                                                <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                                                    <!-- -------------------------------- QDate -------------------------------- -->
+                                                    <q-date
+                                                        v-model="form.notification_date"
+                                                        mask="YYYY/MM/DD"
+                                                        title="تاریخ ثبت سفارش"
+                                                        subtitle="email date"
+                                                        calendar="persian"
+                                                        locale="fa-ir"
+                                                    >
+                                                        <div class="row items-center justify-end">
+                                                            <q-btn v-close-popup label="Close" color="primary" flat />
+                                                        </div>
+                                                    </q-date>
+                                                </q-popup-proxy>
+                                            </q-icon>
+                                        </template>
+                                    </q-input>
+<!-- ----------------------------------------------------------------------- -->
+<!--                               back botton                               -->
+<!-- ----------------------------------------------------------------------- -->
+v-if="['show','edit'].includes(routeMethod)"
+<!-- ----------------------------------------------------------------------- -->
+<!--                                 options                                 -->
+<!-- ----------------------------------------------------------------------- -->
+const activityOptions = computed(() =>
+    activities.map((a) => ({
+        label: a.name,
+        value: a.id,
+    })),
+);
+
+const selectedZone = ref('');
+const zoneOptions = computed(() =>
+    activities.map((a) => ({
+        label: a.zone,
+        value: a.id,
+    })),
+);
+
+const batchOptions = computed(() =>
+    batches.map((b) => ({
+        label: `Batch ${b.id} - Size: ${b.size}`,
+        value: b.id,
+    })),
+);
+<!-- ----------------------------------------------------------------------- -->
+<!--                                aggregate                                -->
+<!-- ----------------------------------------------------------------------- -->
+// Example: fetch aggregated orders per month
+        $months = Month::with(['orders.product', 'orders.cuts', 'orders.productions'])->get();
+
+        $aggregatedOrders = $months->map(function ($month) {
+            return $month->orders->map(function ($order) use ($month) {
+                return [
+                    'month_name' => $month->month_name,
+                    'order_id' => $order->id,
+                    'product_name' => $order->product?->name,
+                    'order_quantity' => $order->quantity,
+                    'total_cuts' => $order->cuts->sum('quantity'),
+                    'total_productions' => $order->productions->sum('quantity'),
+                ];
+            });
+        })->flatten();

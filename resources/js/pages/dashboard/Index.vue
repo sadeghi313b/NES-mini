@@ -102,7 +102,9 @@
                 </template>
             </q-table>
             <!-- temp -->
-            <clg :vars="{}" />
+            <clg :vars="{
+                'criteria': criteria ,
+            }" />
         </q-page>
     </panel-layout>
 </template>
@@ -194,7 +196,11 @@ const onPaginationChange = (newPage) => {
                 perPage: pagination.rowsPerPage,
                 criteria: cloneDeep(criteria.value),
             },
-            { preserveState: true, replace: true },
+            { 
+                preserveState: true, 
+                // preserveScroll: true, 
+                replace: true 
+            },
         );
         Cookies.set('pagination', JSON.stringify({ page: newPage, perPage: pagination.rowsPerPage }));
     }
