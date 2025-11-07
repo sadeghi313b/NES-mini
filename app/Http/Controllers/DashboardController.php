@@ -30,17 +30,28 @@ class DashboardController extends Controller implements HasMiddleware
     //. -------------------------------------------------------------------------- */
 
     protected $title = [
-        'icons' => ['shopping_cart', 'add_shopping_cart'],
-        'texts' => ['Orders'],
+        'icons' => ['dashboard'],
+        'texts' => ['Dashboard'],
     ];
 
     
     //. -------------------------------------------------------------------------- */
     //.                                    index                                   */
     //. -------------------------------------------------------------------------- */
-    public function index()
+    public function index(Request $request)
     {
-        // Load products with orders, months, cuts, and productions (through pivot)
+        //# criteria
+        $criteria = [
+            'keywords' => [ //keywords is searches texts
+                'month' => (string) $request->input('criteria.keywords.year'),
+            ],
+            'year' => $request->input('criteria.selections') ?: (object) [],
+        ];
+
+        //# data
+
+
+        //. Load products with orders, months, cuts, and productions (through pivot)
         $products = Product::with([
             'orders' => function ($q) {
                 $q->with(['month:id,name', 'cuts', 'productions']);
